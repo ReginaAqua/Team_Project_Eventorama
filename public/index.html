@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Event Calendar - With Logo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <!-- Left side text (optional) -->
+      <div class="site-logo">
+        <h1>Eventorama</h1>
+      </div>
+
+      <!-- Logo in top-right corner -->
+      <div class="logo-container">
+        <!-- Inline SVG Logo -->
+        <svg 
+          width="120" 
+          height="40" 
+          viewBox="0 0 200 60" 
+          xmlns="http://www.w3.org/2000/svg"
+          aria-label="Eventorama Logo"
+        >
+          <defs>
+            <linearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stop-color="#6F2C91"/>
+              <stop offset="100%" stop-color="#E3B7F2"/>
+            </linearGradient>
+          </defs>
+          <rect width="200" height="60" rx="10" ry="10" fill="url(#grad)" />
+          <text 
+            x="100" 
+            y="35" 
+            font-size="20" 
+            text-anchor="middle" 
+            fill="#fff" 
+            font-family="Arial, sans-serif"
+          >
+            Eventorama
+          </text>
+        </svg>
+      </div>
+
+      <!-- Navigation buttons (right side) -->
+      <nav class="main-nav">
+        <button id="loginBtn">Login</button>
+        <button id="signupBtn">Sign Up</button>
+        <button id="logoutBtn" style="display:none;">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Modal for Login/Sign Up -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="authForm">
+        <h2 id="modalTitle">Login</h2>
+        <form id="loginForm">
+          <input type="hidden" name="action" value="login">
+          <label for="username">Username:</label>
+          <input type="text" name="username" required>
+          <label for="password">Password:</label>
+          <input type="password" name="password" required>
+          <button type="submit">Submit</button>
+        </form>
+        <form id="signupForm" style="display:none;">
+          <input type="hidden" name="action" value="register">
+          <label for="username">Username:</label>
+          <input type="text" name="username" required>
+          <label for="password">Password:</label>
+          <input type="password" name="password" required>
+          <button type="submit">Register</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- Left column (Date picker & Create Event) -->
+    <section class="sidebar-left">
+      <!-- Date picker to view events by date -->
+      <div class="date-picker">
+        <h3>Select a Date to View Events</h3>
+        <input type="date" id="viewDate">
+        <button id="viewDateBtn">View Events</button>
+      </div>
+
+      <!-- Event creation form (visible when logged in) -->
+      <section id="createEventSection" style="display:none;">
+        <h3>Create Event</h3>
+        <!-- Important: enctype + file input for poster -->
+        <form id="createEventForm" enctype="multipart/form-data">
+          <label for="eventName">Event Name:</label>
+          <input type="text" name="eventName" required>
+
+          <label for="location">Location:</label>
+          <input type="text" name="location" required>
+
+          <label for="date">Date:</label>
+          <input type="date" name="date" required>
+
+          <label for="time">Time:</label>
+          <input type="time" name="time" required>
+
+          <label for="description">Description:</label>
+          <textarea name="description" required></textarea>
+
+          <label for="poster">Event Poster:</label>
+          <input type="file" name="poster" accept="image/*">
+
+          <button type="submit">Create Event</button>
+        </form>
+      </section>
+    </section>
+
+    <!-- Right column (main listing) -->
+    <section class="main-listing">
+      <h2>All Events</h2>
+      <div id="calendar">
+        <!-- The vertical listing of events will be rendered here by script.js -->
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Eventorama</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

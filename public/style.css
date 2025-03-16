@@ -1,0 +1,248 @@
+/* style.css */
+
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+/* Header */
+header {
+  background-color: #6F2C91; /* Purple theme */
+  padding: 10px 0;
+  position: relative; /* So we can position .logo-container absolutely if needed */
+}
+
+.header-container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative; /* So .logo-container can be placed inside */
+}
+
+/* Left side text (optional) */
+.site-logo h1 {
+  color: #fff;
+  font-size: 1.8rem;
+  margin-left: 5px;
+}
+
+/* Inline SVG logo container */
+.logo-container {
+  position: absolute;
+  top: 10px;
+  right: 140px; /* Leaves space for the nav buttons */
+  width: 120px;
+  height: 40px;
+}
+
+/* Navigation buttons (top-right) */
+.main-nav button {
+  margin-left: 10px;
+  padding: 6px 12px;
+  background-color: #fff;
+  border: none;
+  color: #6F2C91;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.main-nav button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Layout for main content */
+main {
+  display: flex;
+  width: 90%;
+  max-width: 1200px;
+  margin: 20px auto;
+  gap: 20px;
+}
+
+/* Sidebar (left) */
+.sidebar-left {
+  flex: 0 0 250px;
+  background-color: #fdfdfd;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.date-picker {
+  margin-bottom: 20px;
+}
+
+.date-picker h3 {
+  color: #6F2C91;
+  margin-bottom: 10px;
+}
+
+.date-picker input,
+.date-picker button {
+  margin-right: 5px;
+  margin-bottom: 10px;
+  padding: 6px;
+  font-size: 0.9rem;
+}
+
+.date-picker button {
+  background-color: #6F2C91;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.date-picker button:hover {
+  background-color: #581f72;
+}
+
+/* Event creation form */
+#createEventSection {
+  margin-top: 20px;
+}
+
+#createEventSection form {
+  display: flex;
+  flex-direction: column;
+}
+
+#createEventSection form input,
+#createEventSection form textarea {
+  margin-bottom: 10px;
+  padding: 8px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#createEventSection form button {
+  background-color: #6F2C91;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+#createEventSection form button:hover {
+  background-color: #581f72;
+}
+
+/* Main listing (right) */
+.main-listing {
+  flex: 1;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.main-listing h2 {
+  color: #6F2C91;
+  margin-bottom: 15px;
+}
+
+/* Vertical Event List */
+#calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Each hour-slot or date-slot */
+.hour-slot {
+  background-color: #fafafa;
+  border: 1px solid #eee;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.hour-slot strong {
+  color: #6F2C91;
+  font-size: 1rem;
+}
+
+/* Event inside the hour slot */
+.event {
+  margin-top: 10px;
+  padding: 8px;
+  background-color: #ffffff;
+  border-left: 3px solid #6F2C91;
+  border-radius: 4px;
+}
+
+.event p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+}
+
+/* Buttons for "Going" / "Thinking" */
+.event button {
+  background-color: #6F2C91;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  margin-right: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.event button:hover {
+  background-color: #581f72;
+}
+
+/* Modal Styles */
+.modal {
+  display: none; 
+  position: fixed; 
+  z-index: 1000; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%; 
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 10% auto; 
+  padding: 20px;
+  border: 1px solid #888;
+  width: 300px;
+  border-radius: 8px;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Footer */
+footer {
+  width: 90%;
+  max-width: 1200px;
+  margin: 20px auto;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #666;
+}
