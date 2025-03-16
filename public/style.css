@@ -15,9 +15,9 @@ body {
 
 /* Header */
 header {
-  background-color: #6F2C91; /* Purple theme */
-  padding: 10px 0;
-  position: relative; /* So we can position .logo-container absolutely if needed */
+  background-color: #6F2C91;
+  padding: 5px 0;
+  position: relative;
 }
 
 .header-container {
@@ -27,26 +27,17 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: relative; /* So .logo-container can be placed inside */
+  position: relative;
 }
 
-/* Left side text (optional) */
-.site-logo h1 {
-  color: #fff;
-  font-size: 1.8rem;
-  margin-left: 5px;
+.site-logo img {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
-/* Inline SVG logo container */
-.logo-container {
-  position: absolute;
-  top: 10px;
-  right: 140px; /* Leaves space for the nav buttons */
-  width: 120px;
-  height: 40px;
-}
-
-/* Navigation buttons (top-right) */
+/* Navigation buttons */
 .main-nav button {
   margin-left: 10px;
   padding: 6px 12px;
@@ -62,7 +53,7 @@ header {
   background-color: #f0f0f0;
 }
 
-/* Layout for main content */
+/* Main Layout */
 main {
   display: flex;
   width: 90%;
@@ -110,7 +101,7 @@ main {
   background-color: #581f72;
 }
 
-/* Event creation form */
+/* Create Event Form */
 #createEventSection {
   margin-top: 20px;
 }
@@ -157,19 +148,19 @@ main {
   margin-bottom: 15px;
 }
 
-/* Vertical Event List */
+/* Calendar & Events */
 #calendar {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-/* Each hour-slot or date-slot */
 .hour-slot {
   background-color: #fafafa;
   border: 1px solid #eee;
   padding: 10px;
   border-radius: 4px;
+  margin-bottom: 10px;
 }
 
 .hour-slot strong {
@@ -177,7 +168,6 @@ main {
   font-size: 1rem;
 }
 
-/* Event inside the hour slot */
 .event {
   margin-top: 10px;
   padding: 8px;
@@ -191,13 +181,13 @@ main {
   font-size: 0.9rem;
 }
 
-/* Buttons for "Going" / "Thinking" */
 .event button {
   background-color: #6F2C91;
   color: #fff;
   border: none;
   padding: 6px 10px;
   margin-right: 5px;
+  margin-top: 5px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.8rem;
@@ -207,34 +197,110 @@ main {
   background-color: #581f72;
 }
 
-/* Modal Styles */
+/* Modals */
 .modal {
-  display: none; 
-  position: fixed; 
-  z-index: 1000; 
+  display: none;
+  position: fixed;
+  z-index: 1000;
   left: 0;
   top: 0;
-  width: 100%; 
-  height: 100%; 
+  width: 100%;
+  height: 100%;
   overflow: auto;
   background-color: rgba(0,0,0,0.4);
 }
 
 .modal-content {
   background-color: #fff;
-  margin: 10% auto; 
+  margin: 10% auto;
   padding: 20px;
-  border: 1px solid #888;
-  width: 300px;
+  border: 2px solid #6F2C91;
+  width: 400px;
+  max-width: 90%;
   border-radius: 8px;
+  position: relative;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
 }
 
 .close {
   color: #aaa;
-  float: right;
-  font-size: 28px;
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 24px;
   font-weight: bold;
   cursor: pointer;
+}
+
+.close:hover {
+  color: #333;
+}
+
+.modal-content h2 {
+  margin-bottom: 15px;
+  color: #6F2C91;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content form label {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #6F2C91;
+}
+
+.modal-content form input[type="text"],
+.modal-content form input[type="date"],
+.modal-content form input[type="time"],
+.modal-content form input[type="password"],
+.modal-content form input[type="file"],
+.modal-content form textarea {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.modal-content form button[type="submit"] {
+  background-color: #6F2C91;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  margin-top: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-content form button[type="submit"]:hover {
+  background-color: #581f72;
+}
+
+/* Map containers */
+.map-container {
+  margin: 10px 0;
+  width: 100%;
+  height: 200px; /* adjust as needed */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  position: relative;
+}
+
+/* Leaflet map must fill the container */
+.map-container > div {
+  width: 100%;
+  height: 100%;
+}
+
+/* Leaflet Control Geocoder search box, optionally style it further */
+.leaflet-control-geocoder-icon {
+  background-image: url("https://unpkg.com/leaflet-control-geocoder/dist/images/search-icon.png");
 }
 
 /* Footer */

@@ -1,50 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Event Calendar - With Logo</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Event Calendar - Leaflet Control Geocoder</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+  <!-- Leaflet Control Geocoder CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+  />
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <div class="header-container">
-      <!-- Left side text (optional) -->
+      <!-- Logo (top-left) -->
       <div class="site-logo">
-        <h1>Eventorama</h1>
+        <img src="images/eventorama_logo.png" alt="Eventorama Logo" width="80" height="80" />
       </div>
-
-      <!-- Logo in top-right corner -->
-      <div class="logo-container">
-        <!-- Inline SVG Logo -->
-        <svg 
-          width="120" 
-          height="40" 
-          viewBox="0 0 200 60" 
-          xmlns="http://www.w3.org/2000/svg"
-          aria-label="Eventorama Logo"
-        >
-          <defs>
-            <linearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0%" stop-color="#6F2C91"/>
-              <stop offset="100%" stop-color="#E3B7F2"/>
-            </linearGradient>
-          </defs>
-          <rect width="200" height="60" rx="10" ry="10" fill="url(#grad)" />
-          <text 
-            x="100" 
-            y="35" 
-            font-size="20" 
-            text-anchor="middle" 
-            fill="#fff" 
-            font-family="Arial, sans-serif"
-          >
-            Eventorama
-          </text>
-        </svg>
-      </div>
-
-      <!-- Navigation buttons (right side) -->
+      <!-- Navigation buttons -->
       <nav class="main-nav">
         <button id="loginBtn">Login</button>
         <button id="signupBtn">Sign Up</button>
@@ -79,26 +59,57 @@
     </div>
   </div>
 
+  <!-- Modal for Editing Event (Admin Only) -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="editClose">&times;</span>
+      <h2>Edit Event</h2>
+      <form id="editEventForm" enctype="multipart/form-data">
+        <input type="hidden" name="eventId" id="editEventId">
+
+        <label for="editEventName">Event Name:</label>
+        <input type="text" name="eventName" id="editEventName" required>
+
+        <label for="editDate">Date:</label>
+        <input type="date" name="date" id="editDate" required>
+
+        <label for="editTime">Time:</label>
+        <input type="time" name="time" id="editTime" required>
+
+        <label for="editDescription">Description:</label>
+        <textarea name="description" id="editDescription" required></textarea>
+
+        <label for="editPoster">Event Poster (optional):</label>
+        <input type="file" name="poster" id="editPoster" accept="image/*">
+
+        <!-- The Leaflet map for picking location during Edit -->
+        <div class="map-container">
+          <div id="mapEdit"></div>
+        </div>
+        <!-- Hidden fields to store lat/lon and address from the map -->
+        <input type="hidden" name="lat" id="editLat">
+        <input type="hidden" name="lon" id="editLon">
+        <input type="hidden" name="location" id="editLocation">
+
+        <button type="submit">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
   <main>
-    <!-- Left column (Date picker & Create Event) -->
+    <!-- Left column: Date picker & Create Event -->
     <section class="sidebar-left">
-      <!-- Date picker to view events by date -->
       <div class="date-picker">
         <h3>Select a Date to View Events</h3>
         <input type="date" id="viewDate">
         <button id="viewDateBtn">View Events</button>
       </div>
 
-      <!-- Event creation form (visible when logged in) -->
       <section id="createEventSection" style="display:none;">
         <h3>Create Event</h3>
-        <!-- Important: enctype + file input for poster -->
         <form id="createEventForm" enctype="multipart/form-data">
           <label for="eventName">Event Name:</label>
           <input type="text" name="eventName" required>
-
-          <label for="location">Location:</label>
-          <input type="text" name="location" required>
 
           <label for="date">Date:</label>
           <input type="date" name="date" required>
@@ -112,23 +123,35 @@
           <label for="poster">Event Poster:</label>
           <input type="file" name="poster" accept="image/*">
 
+          <!-- The Leaflet map for picking location during creation -->
+          <div class="map-container">
+            <div id="mapCreate"></div>
+          </div>
+          <!-- Hidden fields to store lat/lon and address from the map -->
+          <input type="hidden" name="lat" id="createLat">
+          <input type="hidden" name="lon" id="createLon">
+          <input type="hidden" name="location" id="createLocation">
+
           <button type="submit">Create Event</button>
         </form>
       </section>
     </section>
 
-    <!-- Right column (main listing) -->
+    <!-- Right column: Event Listing -->
     <section class="main-listing">
       <h2>All Events</h2>
-      <div id="calendar">
-        <!-- The vertical listing of events will be rendered here by script.js -->
-      </div>
+      <div id="calendar"></div>
     </section>
   </main>
 
   <footer>
     <p>© 2025 Eventorama</p>
   </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet Control Geocoder JS -->
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
   <script src="script.js"></script>
 </body>

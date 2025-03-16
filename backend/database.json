@@ -1,15 +1,28 @@
 [
     {
-        "id": "67d6b4c5e8a16",
+        "id": "67d6d52768e62",
         "username": "tomas",
         "eventName": "PARTY",
-        "location": "Dervenion. 32 10681",
+        "location": "Dervenion. 32 10682",
+        "date": "2025-03-21",
+        "time": "18:44",
+        "description": "dfdfdfdf",
+        "poster": "uploads\/67d6d52768ca7_Screenshot 2024-04-28 225851.png",
+        "going": [],
+        "thinking": [],
+        "created_at": "2025-03-16 14:41:59"
+    },
+    {
+        "id": "67d6e2e40aedb",
+        "username": "tomas",
+        "eventName": "PARTY 2",
+        "location": "19, \u0394\u03b7\u03bc\u03bf\u03c6\u03ce\u03bd\u03c4\u03bf\u03c2, \u0398\u03b7\u03c3\u03b5\u03af\u03bf, \u03a3\u03c5\u03bd\u03bf\u03b9\u03ba\u03af\u03b1 \u0386\u03bd\u03c9 \u03a0\u03b5\u03c4\u03c1\u03b1\u03bb\u03ce\u03bd\u03c9\u03bd, \u03a0\u03b5\u03c4\u03c1\u03ac\u03bb\u03c9\u03bd\u03b1, 3rd District of Athens, Athens, Municipality of Athens, Regional Unit of Central Athens, Attica, 118 51, Greece",
         "date": "2025-03-22",
-        "time": "23:00",
-        "description": "Party time",
-        "poster": "uploads\/67d6b4c5e882d_Screenshot 2024-04-28 225851.png",
-        "going": 0,
-        "thinking": 0,
-        "created_at": "2025-03-16 12:23:49"
+        "time": "22:00",
+        "description": "\u03a0\u03b1\u03c1\u03c4\u03c5 \u03c4\u03b9\u03bc\u03b5 2",
+        "poster": "uploads\/67d6e2e40adc8_Screenshot 2024-05-03 130854.png",
+        "going": [],
+        "thinking": [],
+        "created_at": "2025-03-16 15:40:36"
     }
 ]
