@@ -2,19 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Event Calendar - Leaflet Control Geocoder</title>
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"
-  />
-  <!-- Leaflet Control Geocoder CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
-  />
-
+  <title>Event Calendar - Hover Expansion</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -22,7 +10,7 @@
     <div class="header-container">
       <!-- Logo (top-left) -->
       <div class="site-logo">
-        <img src="images/eventorama_logo.png" alt="Eventorama Logo" width="80" height="80" />
+        <img src="images/eventorama_logo.png" alt="Eventorama Logo" width="80" height="80">
       </div>
       <!-- Navigation buttons -->
       <nav class="main-nav">
@@ -59,7 +47,7 @@
     </div>
   </div>
 
-  <!-- Modal for Editing Event (Admin Only) -->
+  <!-- Modal for Editing Event (Admin) -->
   <div id="editModal" class="modal">
     <div class="modal-content">
       <span class="close" id="editClose">&times;</span>
@@ -79,17 +67,11 @@
         <label for="editDescription">Description:</label>
         <textarea name="description" id="editDescription" required></textarea>
 
+        <label for="editDisplayLocation">Short Address (Optional):</label>
+        <input type="text" name="displayLocation" id="editDisplayLocation" placeholder="Store name or short address">
+
         <label for="editPoster">Event Poster (optional):</label>
         <input type="file" name="poster" id="editPoster" accept="image/*">
-
-        <!-- The Leaflet map for picking location during Edit -->
-        <div class="map-container">
-          <div id="mapEdit"></div>
-        </div>
-        <!-- Hidden fields to store lat/lon and address from the map -->
-        <input type="hidden" name="lat" id="editLat">
-        <input type="hidden" name="lon" id="editLon">
-        <input type="hidden" name="location" id="editLocation">
 
         <button type="submit">Save Changes</button>
       </form>
@@ -97,7 +79,7 @@
   </div>
 
   <main>
-    <!-- Left column: Date picker & Create Event -->
+    <!-- Left column (Date picker & Create Event) -->
     <section class="sidebar-left">
       <div class="date-picker">
         <h3>Select a Date to View Events</h3>
@@ -120,24 +102,18 @@
           <label for="description">Description:</label>
           <textarea name="description" required></textarea>
 
+          <label for="displayLocation">Short Address (Optional):</label>
+          <input type="text" name="displayLocation" placeholder="Store name or short address">
+
           <label for="poster">Event Poster:</label>
           <input type="file" name="poster" accept="image/*">
-
-          <!-- The Leaflet map for picking location during creation -->
-          <div class="map-container">
-            <div id="mapCreate"></div>
-          </div>
-          <!-- Hidden fields to store lat/lon and address from the map -->
-          <input type="hidden" name="lat" id="createLat">
-          <input type="hidden" name="lon" id="createLon">
-          <input type="hidden" name="location" id="createLocation">
 
           <button type="submit">Create Event</button>
         </form>
       </section>
     </section>
 
-    <!-- Right column: Event Listing -->
+    <!-- Right column (main listing) -->
     <section class="main-listing">
       <h2>All Events</h2>
       <div id="calendar"></div>
@@ -147,11 +123,6 @@
   <footer>
     <p>© 2025 Eventorama</p>
   </footer>
-
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Leaflet Control Geocoder JS -->
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
   <script src="script.js"></script>
 </body>

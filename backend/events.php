@@ -8,31 +8,17 @@ $eventsFile = $config['events_file'];
 $events = readJSON($eventsFile);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // ADMIN ACTIONS: Edit or Delete event (only allowed if user is admin)
+    // ADMIN ACTION: Delete or Edit
     if (isset($_POST['adminAction'])) {
         $adminAction = sanitize($_POST['adminAction']);
         $eventId = sanitize($_POST['eventId']);
-        $username = sanitize($_POST['username']); // username sent from client
-
-        // Load users to check role
-        $users = readJSON($config['users_file']);
-        $adminUser = null;
-        foreach ($users as $user) {
-            if ($user['username'] === $username) {
-                $adminUser = $user;
-                break;
-            }
-        }
-        // Verify the user's role is "admin"
-        if (!$adminUser || strtolower($adminUser['role']) !== 'admin') {
-            echo json_encode(['success' => false, 'message' => 'Unauthorized.']);
-            exit;
-        }
+        $username = sanitize($_POST['username']); // should be admin or check user role
 
         if ($adminAction === 'delete') {
+            // Delete event
             $found = false;
-            foreach ($events as $key => $event) {
-                if ($event['id'] === $eventId) {
+            foreach ($events as $key => $ev) {
+                if ($ev['id'] === $eventId) {
                     $found = true;
                     unset($events[$key]);
                     $events = array_values($events);
@@ -44,29 +30,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             if (writeJSON($eventsFile, $events)) {
-                echo json_encode(['success' => true, 'message' => 'Event deleted successfully.']);
+                echo json_encode(['success' => true, 'message' => 'Event deleted.']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to delete event.']);
             }
             exit;
         }
         elseif ($adminAction === 'edit') {
+            // Edit event
             $found = false;
-            foreach ($events as &$event) {
-                if ($event['id'] === $eventId) {
+            foreach ($events as &$ev) {
+                if ($ev['id'] === $eventId) {
                     $found = true;
-                    $event['eventName'] = isset($_POST['eventName']) ? sanitize($_POST['eventName']) : $event['eventName'];
-                    $event['location'] = isset($_POST['location']) ? sanitize($_POST['location']) : $event['location'];
-                    $event['date'] = isset($_POST['date']) ? sanitize($_POST['date']) : $event['date'];
-                    $event['time'] = isset($_POST['time']) ? sanitize($_POST['time']) : $event['time'];
-                    $event['description'] = isset($_POST['description']) ? sanitize($_POST['description']) : $event['description'];
-                    // Optional poster update:
+                    // Update fields
+                    $ev['eventName']      = isset($_POST['eventName']) ? sanitize($_POST['eventName']) : $ev['eventName'];
+                    $ev['date']           = isset($_POST['date']) ? sanitize($_POST['date']) : $ev['date'];
+                    $ev['time']           = isset($_POST['time']) ? sanitize($_POST['time']) : $ev['time'];
+                    $ev['description']    = isset($_POST['description']) ? sanitize($_POST['description']) : $ev['description'];
+                    $ev['displayLocation']= isset($_POST['displayLocation']) ? sanitize($_POST['displayLocation']) : $ev['displayLocation'];
+
+                    // If you store lat/lon
+                    if (isset($_POST['lat'])) {
+                        $ev['lat'] = sanitize($_POST['lat']);
+                    }
+                    if (isset($_POST['lon'])) {
+                        $ev['lon'] = sanitize($_POST['lon']);
+                    }
+                    if (isset($_POST['location'])) {
+                        $ev['location'] = sanitize($_POST['location']);
+                    }
+
+                    // If new poster file is uploaded
                     if (isset($_FILES['poster']) && $_FILES['poster']['error'] === UPLOAD_ERR_OK) {
                         $uploadsDir = __DIR__ . '/../public/uploads/';
                         $uniqueFilename = uniqid() . '_' . basename($_FILES['poster']['name']);
                         $targetFile = $uploadsDir . $uniqueFilename;
                         if (move_uploaded_file($_FILES['poster']['tmp_name'], $targetFile)) {
-                            $event['poster'] = 'uploads/' . $uniqueFilename;
+                            $ev['poster'] = 'uploads/' . $uniqueFilename;
                         }
                     }
                     break;
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             if (writeJSON($eventsFile, $events)) {
-                echo json_encode(['success' => true, 'message' => 'Event updated successfully.']);
+                echo json_encode(['success' => true, 'message' => 'Event updated.']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to update event.']);
             }
@@ -85,41 +85,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // VOTE ACTION: (for non-admin users)
+    // VOTE ACTION (Going/Thinking)
     if (isset($_POST['vote'])) {
-        $voteType = sanitize($_POST['vote']); // Expected "going" or "thinking"
+        $voteType = sanitize($_POST['vote']);
         $eventId = sanitize($_POST['eventId']);
         $username = sanitize($_POST['username']);
 
         $found = false;
-        foreach ($events as &$event) {
-            if ($event['id'] === $eventId) {
+        foreach ($events as &$ev) {
+            if ($ev['id'] === $eventId) {
                 $found = true;
                 if (!in_array($voteType, ['going', 'thinking'])) {
                     echo json_encode(['success' => false, 'message' => 'Invalid vote type.']);
                     exit;
                 }
-                if (!isset($event['going']) || !is_array($event['going'])) {
-                    $event['going'] = [];
+                if (!isset($ev['going']) || !is_array($ev['going'])) {
+                    $ev['going'] = [];
                 }
-                if (!isset($event['thinking']) || !is_array($event['thinking'])) {
-                    $event['thinking'] = [];
+                if (!isset($ev['thinking']) || !is_array($ev['thinking'])) {
+                    $ev['thinking'] = [];
                 }
                 if ($voteType === 'going') {
-                    if (!in_array($username, $event['going'])) {
-                        $event['going'][] = $username;
+                    if (!in_array($username, $ev['going'])) {
+                        $ev['going'][] = $username;
                     }
-                    if (($key = array_search($username, $event['thinking'])) !== false) {
-                        unset($event['thinking'][$key]);
-                        $event['thinking'] = array_values($event['thinking']);
+                    // Remove from thinking
+                    if (($key = array_search($username, $ev['thinking'])) !== false) {
+                        unset($ev['thinking'][$key]);
+                        $ev['thinking'] = array_values($ev['thinking']);
                     }
-                } elseif ($voteType === 'thinking') {
-                    if (!in_array($username, $event['thinking'])) {
-                        $event['thinking'][] = $username;
+                } else { // thinking
+                    if (!in_array($username, $ev['thinking'])) {
+                        $ev['thinking'][] = $username;
                     }
-                    if (($key = array_search($username, $event['going'])) !== false) {
-                        unset($event['going'][$key]);
-                        $event['going'] = array_values($event['going']);
+                    // Remove from going
+                    if (($key = array_search($username, $ev['going'])) !== false) {
+                        unset($ev['going'][$key]);
+                        $ev['going'] = array_values($ev['going']);
                     }
                 }
                 break;
@@ -136,20 +138,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit;
     }
+
+    // CREATE EVENT
     else {
-        // EVENT CREATION (for non-admin users)
+        $username    = isset($_POST['username']) ? sanitize($_POST['username']) : '';
         $eventName   = isset($_POST['eventName']) ? sanitize($_POST['eventName']) : '';
-        $location    = isset($_POST['location']) ? sanitize($_POST['location']) : '';
         $date        = isset($_POST['date']) ? sanitize($_POST['date']) : '';
         $time        = isset($_POST['time']) ? sanitize($_POST['time']) : '';
         $description = isset($_POST['description']) ? sanitize($_POST['description']) : '';
-        $username    = isset($_POST['username']) ? sanitize($_POST['username']) : '';
+        $displayLocation = isset($_POST['displayLocation']) ? sanitize($_POST['displayLocation']) : '';
+        $lat         = isset($_POST['lat']) ? sanitize($_POST['lat']) : '';
+        $lon         = isset($_POST['lon']) ? sanitize($_POST['lon']) : '';
+        $fullLoc     = isset($_POST['location']) ? sanitize($_POST['location']) : '';
 
-        if (!$eventName || !$location || !$date || !$time || !$description || !$username) {
-            echo json_encode(['success' => false, 'message' => 'All fields except poster are required.']);
+        if (!$username || !$eventName || !$date || !$time || !$description) {
+            echo json_encode(['success' => false, 'message' => 'Missing required fields.']);
             exit;
         }
 
+        // Handle poster
         $posterPath = '';
         if (isset($_FILES['poster']) && $_FILES['poster']['error'] === UPLOAD_ERR_OK) {
             $uploadsDir = __DIR__ . '/../public/uploads/';
@@ -157,31 +164,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetFile = $uploadsDir . $uniqueFilename;
             if (move_uploaded_file($_FILES['poster']['tmp_name'], $targetFile)) {
                 $posterPath = 'uploads/' . $uniqueFilename;
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to save uploaded file.']);
-                exit;
             }
         }
 
         $newEvent = [
-            'id'          => generateId(),
-            'username'    => $username,
-            'eventName'   => $eventName,
-            'location'    => $location,
-            'date'        => $date,
-            'time'        => $time,
-            'description' => $description,
-            'poster'      => $posterPath,
-            'going'       => [],
-            'thinking'    => [],
-            'created_at'  => date("Y-m-d H:i:s")
+            'id'             => generateId(),
+            'username'       => $username,
+            'eventName'      => $eventName,
+            'date'           => $date,
+            'time'           => $time,
+            'description'    => $description,
+            'poster'         => $posterPath,
+            'displayLocation'=> $displayLocation, // short address
+            'lat'            => $lat,
+            'lon'            => $lon,
+            'location'       => $fullLoc,
+            'going'          => [],
+            'thinking'       => [],
+            'created_at'     => date("Y-m-d H:i:s")
         ];
 
         $events[] = $newEvent;
         if (writeJSON($eventsFile, $events)) {
-            echo json_encode(['success' => true, 'message' => 'Event created successfully.']);
+            echo json_encode(['success' => true, 'message' => 'Event created.']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to save event data.']);
+            echo json_encode(['success' => false, 'message' => 'Failed to save event.']);
         }
         exit;
     }

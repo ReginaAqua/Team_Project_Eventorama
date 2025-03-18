@@ -9,15 +9,16 @@
 
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f5f5;
+  background-color: #f8f8f8;
   color: #333;
 }
 
-/* Header */
+/* Gradient Header */
 header {
-  background-color: #6F2C91;
-  padding: 5px 0;
+  background: linear-gradient(135deg, #6F2C91, #c86dd7);
+  padding: 10px 0;
   position: relative;
+  color: #fff;
 }
 
 .header-container {
@@ -27,26 +28,25 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: relative;
 }
 
 .site-logo img {
   display: block;
   margin: 0;
-  padding: 0;
   border: none;
 }
 
 /* Navigation buttons */
 .main-nav button {
   margin-left: 10px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   background-color: #fff;
   border: none;
   color: #6F2C91;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 20px;
   font-weight: bold;
+  transition: background-color 0.3s ease;
 }
 
 .main-nav button:hover {
@@ -65,14 +65,10 @@ main {
 /* Sidebar (left) */
 .sidebar-left {
   flex: 0 0 250px;
-  background-color: #fdfdfd;
+  background-color: #fff;
   border: 1px solid #ccc;
   padding: 15px;
-  border-radius: 5px;
-}
-
-.date-picker {
-  margin-bottom: 20px;
+  border-radius: 8px;
 }
 
 .date-picker h3 {
@@ -84,15 +80,16 @@ main {
 .date-picker button {
   margin-right: 5px;
   margin-bottom: 10px;
-  padding: 6px;
+  padding: 8px;
   font-size: 0.9rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
 
 .date-picker button {
   background-color: #6F2C91;
   color: #fff;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
 }
@@ -124,10 +121,11 @@ main {
   background-color: #6F2C91;
   color: #fff;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 14px;
   cursor: pointer;
   font-weight: bold;
-  border-radius: 4px;
+  border-radius: 20px;
+  transition: background-color 0.3s ease;
 }
 
 #createEventSection form button:hover {
@@ -140,7 +138,7 @@ main {
   background-color: #fff;
   border: 1px solid #ccc;
   padding: 15px;
-  border-radius: 5px;
+  border-radius: 8px;
 }
 
 .main-listing h2 {
@@ -148,18 +146,18 @@ main {
   margin-bottom: 15px;
 }
 
-/* Calendar & Events */
 #calendar {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+/* Hour slot container */
 .hour-slot {
   background-color: #fafafa;
   border: 1px solid #eee;
   padding: 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-bottom: 10px;
 }
 
@@ -168,17 +166,37 @@ main {
   font-size: 1rem;
 }
 
+/* Event Card */
 .event {
   margin-top: 10px;
-  padding: 8px;
   background-color: #ffffff;
-  border-left: 3px solid #6F2C91;
-  border-radius: 4px;
+  border-left: 4px solid #6F2C91;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.event img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.event-content {
+  flex: 1;
 }
 
 .event p {
-  margin: 5px 0;
+  margin: 3px 0;
   font-size: 0.9rem;
+  line-height: 1.2rem;
 }
 
 .event button {
@@ -188,13 +206,38 @@ main {
   padding: 6px 10px;
   margin-right: 5px;
   margin-top: 5px;
-  border-radius: 4px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 0.8rem;
+  transition: background-color 0.3s ease;
 }
 
 .event button:hover {
   background-color: #581f72;
+}
+
+.event a {
+  color: #6F2C91;
+  font-weight: bold;
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+.event a:hover {
+  text-decoration: underline;
+}
+
+/* Hidden details: Slide-down and fade effect */
+.hidden-details {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.event.expanded .hidden-details {
+  max-height: 150px; /* Adjust to fit your content */
+  opacity: 1;
 }
 
 /* Modals */
@@ -212,7 +255,7 @@ main {
 
 .modal-content {
   background-color: #fff;
-  margin: 10% auto;
+  margin: 5% auto;
   padding: 20px;
   border: 2px solid #6F2C91;
   width: 400px;
@@ -271,11 +314,12 @@ main {
   background-color: #6F2C91;
   color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 10px 14px;
   margin-top: 10px;
-  border-radius: 4px;
+  border-radius: 20px;
   cursor: pointer;
   font-weight: bold;
+  transition: background-color 0.3s ease;
 }
 
 .modal-content form button[type="submit"]:hover {
@@ -286,21 +330,15 @@ main {
 .map-container {
   margin: 10px 0;
   width: 100%;
-  height: 200px; /* adjust as needed */
+  height: 200px;
   border: 1px solid #ccc;
   border-radius: 4px;
   position: relative;
 }
 
-/* Leaflet map must fill the container */
 .map-container > div {
   width: 100%;
   height: 100%;
-}
-
-/* Leaflet Control Geocoder search box, optionally style it further */
-.leaflet-control-geocoder-icon {
-  background-image: url("https://unpkg.com/leaflet-control-geocoder/dist/images/search-icon.png");
 }
 
 /* Footer */

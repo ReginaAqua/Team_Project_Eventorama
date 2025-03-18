@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // DOM references
+  // Basic references
   const loginBtn = document.getElementById("loginBtn");
   const signupBtn = document.getElementById("signupBtn");
   const logoutBtn = document.getElementById("logoutBtn");
@@ -22,26 +22,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const editDate = document.getElementById("editDate");
   const editTime = document.getElementById("editTime");
   const editDescription = document.getElementById("editDescription");
-  const editPoster = document.getElementById("editPoster");
+  const editDisplayLocation = document.getElementById("editDisplayLocation");
 
-  // Hidden fields for location
-  const createLat = document.getElementById("createLat");
-  const createLon = document.getElementById("createLon");
-  const createLocation = document.getElementById("createLocation");
-
-  const editLat = document.getElementById("editLat");
-  const editLon = document.getElementById("editLon");
-  const editLocation = document.getElementById("editLocation");
-
-  // For filtering events
   let selectedDate = null;
   let currentUser = localStorage.getItem("currentUser") || null;
   let currentUserRole = localStorage.getItem("currentUserRole") || null;
 
-  // Initialize UI
   updateUI();
 
-  // Setup date picker default
   if (viewDateInput) {
     viewDateInput.value = new Date().toISOString().split("T")[0];
   }
@@ -52,9 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Auth modals
-  loginBtn.addEventListener("click", () => showModal("login"));
-  signupBtn.addEventListener("click", () => showModal("register"));
+  loginBtn.addEventListener("click", () => { showModal("login"); });
+  signupBtn.addEventListener("click", () => { showModal("register"); });
   logoutBtn.addEventListener("click", () => {
     localStorage.removeItem("currentUser");
     localStorage.removeItem("currentUserRole");
@@ -62,13 +49,9 @@ document.addEventListener("DOMContentLoaded", () => {
     currentUserRole = null;
     updateUI();
   });
-
   closeModal.addEventListener("click", () => { modal.style.display = "none"; });
-  window.addEventListener("click", (e) => {
-    if (e.target === modal) modal.style.display = "none";
-  });
+  window.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
 
-  // Auth forms
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(loginForm);
@@ -103,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Create event form
   createEventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -112,29 +94,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const formData = new FormData(createEventForm);
     formData.append("username", currentUser);
-    // The lat/lon/location are already in hidden fields
     const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
     const result = await response.json();
     if (result.success) {
-      alert("Event created successfully!");
+      alert("Event created!");
       createEventForm.reset();
-      // Reset lat/lon/location
-      createLat.value = "";
-      createLon.value = "";
-      createLocation.value = "";
       fetchEvents();
     } else {
       alert(result.message);
     }
   });
 
-  // Edit modal close
   editClose.addEventListener("click", () => { editModal.style.display = "none"; });
-  window.addEventListener("click", (e) => {
-    if (e.target === editModal) editModal.style.display = "none";
-  });
+  window.addEventListener("click", (e) => { if (e.target === editModal) editModal.style.display = "none"; });
 
-  // Edit event form
   editEventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(editEventForm);
@@ -143,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
     const result = await response.json();
     if (result.success) {
-      alert("Event updated successfully!");
+      alert("Event updated!");
       editModal.style.display = "none";
       fetchEvents();
     } else {
@@ -179,7 +152,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchEvents();
   }
 
-  // Fetch events from backend
   async function fetchEvents() {
     const response = await fetch("../backend/api.php?endpoint=events&action=get");
     const result = await response.json();
@@ -193,7 +165,6 @@ document.addEventListener("DOMContentLoaded", () => {
           displayEvents(filtered);
         }
       } else {
-        // Show upcoming events
         const now = new Date();
         const upcoming = result.events.filter(ev => new Date(ev.date + "T" + ev.time) > now);
         upcoming.sort((a, b) => new Date(a.date + "T" + a.time) - new Date(b.date + "T" + b.time));
@@ -208,7 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Display upcoming events in a simple list
   function displayUpcomingEvents(events) {
     const calendarDiv = document.getElementById("calendar");
     calendarDiv.innerHTML = "<h3>Upcoming Events</h3>";
@@ -219,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
     attachEventListeners();
   }
 
-  // Display events grouped by hour for a specific date
   function displayEvents(events) {
     const calendarDiv = document.getElementById("calendar");
     calendarDiv.innerHTML = "";
@@ -245,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
     attachEventListeners();
   }
 
-  // Helper to create an .event element
+  // Creates an event card with hidden details that expand on hover after 3 seconds.
   function createEventElement(ev) {
     const eventDiv = document.createElement("div");
     eventDiv.className = "event";
@@ -253,10 +222,22 @@ document.addEventListener("DOMContentLoaded", () => {
     eventDiv.setAttribute("data-eventname", ev.eventName);
     eventDiv.setAttribute("data-date", ev.date);
     eventDiv.setAttribute("data-time", ev.time);
-    eventDiv.setAttribute("data-description", ev.description);
-    // We'll store the location text in data-loc
+    eventDiv.setAttribute("data-description", ev.description || "");
+    eventDiv.setAttribute("data-displayLocation", ev.displayLocation || "");
     eventDiv.setAttribute("data-location", ev.location || "");
-    // We'll skip lat/lon if they're not stored, or you can store them too.
+
+    // Hidden details that will slide/fade in
+    const hiddenDetails = `
+      <div class="hidden-details">
+        ${ev.displayLocation ? `<p>${ev.displayLocation}</p>` : ""}
+        ${ev.poster ? `<img src="${ev.poster}" alt="Event Poster">` : ""}
+      </div>
+    `;
+
+    // Going/Thinking counts
+    const goingCount = ev.going && Array.isArray(ev.going) ? ev.going.length : 0;
+    const thinkingCount = ev.thinking && Array.isArray(ev.thinking) ? ev.thinking.length : 0;
+    const countsHTML = `<p>Going: ${goingCount}, Thinking: ${thinkingCount}</p>`;
 
     let voteButtonsHTML = "";
     if (currentUser) {
@@ -265,6 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <button data-eventid="${ev.id}" class="thinkingBtn">Thinking</button>
       `;
     }
+
     let adminButtonsHTML = "";
     if (currentUserRole === "admin") {
       adminButtonsHTML = `
@@ -272,24 +254,36 @@ document.addEventListener("DOMContentLoaded", () => {
         <button data-eventid="${ev.id}" class="deleteBtn">Delete</button>
       `;
     }
-    const goingCount = ev.going && Array.isArray(ev.going) ? ev.going.length : 0;
-    const thinkingCount = ev.thinking && Array.isArray(ev.thinking) ? ev.thinking.length : 0;
-    const voteCountsHTML = `<p>Going: ${goingCount}, Thinking: ${thinkingCount}</p>`;
+
+    // "Details" link
+    const detailsLink = `<a href="event_details.html?id=${ev.id}">Details</a>`;
 
     eventDiv.innerHTML = `
-      <p><strong>${ev.eventName}</strong></p>
-      <p>${ev.description}</p>
-      <p>${ev.date} ${ev.time}</p>
-      <p>${ev.location || ""}</p>
-      ${ ev.poster ? `<img src="${ev.poster}" alt="${ev.eventName}" style="max-width:100px;">` : "" }
-      ${voteCountsHTML}
-      ${voteButtonsHTML}
-      ${adminButtonsHTML}
+      <div class="event-content">
+        <p><strong>${ev.eventName}</strong> (${ev.date} ${ev.time})</p>
+        ${countsHTML}
+        ${voteButtonsHTML}
+        ${adminButtonsHTML}
+        ${detailsLink}
+      </div>
+      ${hiddenDetails}
     `;
+
+    // Set up hover timer for expansion
+    let hoverTimer = null;
+    eventDiv.addEventListener("mouseenter", () => {
+      hoverTimer = setTimeout(() => {
+        eventDiv.classList.add("expanded");
+      }, 3000);
+    });
+    eventDiv.addEventListener("mouseleave", () => {
+      clearTimeout(hoverTimer);
+      eventDiv.classList.remove("expanded");
+    });
+
     return eventDiv;
   }
 
-  // Attach event listeners for Going/Thinking/Admin actions
   function attachEventListeners() {
     if (currentUser) {
       document.querySelectorAll(".goingBtn").forEach(btn => {
@@ -301,11 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
           formData.append("username", currentUser);
           const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
           const result = await response.json();
-          if (result.success) {
-            fetchEvents();
-          } else {
-            alert(result.message);
-          }
+          if (result.success) { fetchEvents(); } else { alert(result.message); }
         });
       });
       document.querySelectorAll(".thinkingBtn").forEach(btn => {
@@ -317,11 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
           formData.append("username", currentUser);
           const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
           const result = await response.json();
-          if (result.success) {
-            fetchEvents();
-          } else {
-            alert(result.message);
-          }
+          if (result.success) { fetchEvents(); } else { alert(result.message); }
         });
       });
       if (currentUserRole === "admin") {
@@ -335,11 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
               formData.append("username", currentUser);
               const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
               const result = await response.json();
-              if (result.success) {
-                fetchEvents();
-              } else {
-                alert(result.message);
-              }
+              if (result.success) { fetchEvents(); } else { alert(result.message); }
             }
           });
         });
@@ -351,67 +333,12 @@ document.addEventListener("DOMContentLoaded", () => {
             editDate.value = eventDiv.getAttribute("data-date");
             editTime.value = eventDiv.getAttribute("data-time");
             editDescription.value = eventDiv.getAttribute("data-description");
-            // We won't know lat/lon unless we stored them in the DB. We'll skip for now.
-            // location text:
-            editLocation.value = eventDiv.getAttribute("data-location");
+            editDisplayLocation.value = eventDiv.getAttribute("data-displayLocation");
             editPoster.value = "";
-            // Show the edit modal
             editModal.style.display = "block";
-            // Re-center the map on the old location if lat/lon exist (optional).
           });
         });
       }
     }
   }
-
-  // -------------- LEAFLET MAPS + CONTROL GEOCODER --------------
-
-  // CREATE EVENT MAP
-  let mapCreate = L.map("mapCreate").setView([37.9838, 23.7275], 13); // Athens default
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(mapCreate);
-
-  let markerCreate = L.marker([37.9838, 23.7275]).addTo(mapCreate);
-
-  // Add the geocoder control
-  let geocoderCreate = L.Control.geocoder({
-    defaultMarkGeocode: false
-  })
-    .on("markgeocode", function(e) {
-      const center = e.geocode.center;
-      markerCreate.setLatLng(center);
-      mapCreate.setView(center, 15);
-      markerCreate.bindPopup(e.geocode.name).openPopup();
-      // Store in hidden fields
-      createLat.value = center.lat;
-      createLon.value = center.lng;
-      createLocation.value = e.geocode.name;
-    })
-    .addTo(mapCreate);
-
-  // EDIT EVENT MAP
-  let mapEdit = L.map("mapEdit").setView([37.9838, 23.7275], 13);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(mapEdit);
-
-  let markerEdit = L.marker([37.9838, 23.7275]).addTo(mapEdit);
-
-  let geocoderEdit = L.Control.geocoder({
-    defaultMarkGeocode: false
-  })
-    .on("markgeocode", function(e) {
-      const center = e.geocode.center;
-      markerEdit.setLatLng(center);
-      mapEdit.setView(center, 15);
-      markerEdit.bindPopup(e.geocode.name).openPopup();
-      // Store in hidden fields
-      editLat.value = center.lat;
-      editLon.value = center.lng;
-      editLocation.value = e.geocode.name;
-    })
-    .addTo(mapEdit);
 });
