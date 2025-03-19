@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Event Details</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
   <header style="background: linear-gradient(135deg, #6F2C91, #c86dd7); padding: 10px; color: #fff;">
@@ -13,19 +15,21 @@
   <main style="width: 90%; max-width: 800px; margin: 20px auto;">
     <button id="backBtn" style="margin-bottom: 20px; background-color: #fff; color: #6F2C91; border: none; padding: 10px 16px; border-radius: 20px; font-weight: bold; cursor: pointer;">← Back to Main</button>
     <div id="eventDetails" style="background-color: #fff; padding: 20px; border: 1px solid #ccc; border-radius: 8px;"></div>
+    <div id="mapDetail"></div>
   </main>
 
   <footer style="text-align:center; margin: 20px auto;">
     <p>© 2025 Eventorama</p>
   </footer>
 
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     let currentUser = localStorage.getItem("currentUser") || null;
-
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get("id");
-
-    document.getElementById("backBtn").addEventListener("click", () => {
+    const backBtn = document.getElementById("backBtn");
+    backBtn.addEventListener("click", () => {
       window.location.href = "index.html";
     });
 
@@ -85,9 +89,25 @@
             alert(data.message);
           }
         }
+        // Initialize the map using the event's coordinates
+        if (ev.lat && ev.lon) {
+          initMap(ev.lat, ev.lon, fullAddress);
+        } else {
+          document.getElementById("mapDetail").innerHTML = "<p>Map not available.</p>";
+        }
       } else {
         document.getElementById("eventDetails").innerHTML = "<p>No events data.</p>";
       }
+    }
+
+    function initMap(lat, lon, address) {
+      const map = L.map("mapDetail").setView([lat, lon], 15);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      const marker = L.marker([lat, lon]).addTo(map);
+      marker.bindPopup(address).openPopup();
     }
 
     loadEvent();

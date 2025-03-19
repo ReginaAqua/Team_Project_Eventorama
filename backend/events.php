@@ -8,14 +8,13 @@ $eventsFile = $config['events_file'];
 $events = readJSON($eventsFile);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // ADMIN ACTION: Delete or Edit
+    // ADMIN ACTION: Delete or Edit event
     if (isset($_POST['adminAction'])) {
         $adminAction = sanitize($_POST['adminAction']);
         $eventId = sanitize($_POST['eventId']);
-        $username = sanitize($_POST['username']); // should be admin or check user role
+        $username = sanitize($_POST['username']); // should be checked for admin role in your implementation
 
         if ($adminAction === 'delete') {
-            // Delete event
             $found = false;
             foreach ($events as $key => $ev) {
                 if ($ev['id'] === $eventId) {
@@ -35,21 +34,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => false, 'message' => 'Failed to delete event.']);
             }
             exit;
-        }
-        elseif ($adminAction === 'edit') {
-            // Edit event
+        } elseif ($adminAction === 'edit') {
             $found = false;
             foreach ($events as &$ev) {
                 if ($ev['id'] === $eventId) {
                     $found = true;
-                    // Update fields
                     $ev['eventName']      = isset($_POST['eventName']) ? sanitize($_POST['eventName']) : $ev['eventName'];
                     $ev['date']           = isset($_POST['date']) ? sanitize($_POST['date']) : $ev['date'];
                     $ev['time']           = isset($_POST['time']) ? sanitize($_POST['time']) : $ev['time'];
                     $ev['description']    = isset($_POST['description']) ? sanitize($_POST['description']) : $ev['description'];
                     $ev['displayLocation']= isset($_POST['displayLocation']) ? sanitize($_POST['displayLocation']) : $ev['displayLocation'];
-
-                    // If you store lat/lon
                     if (isset($_POST['lat'])) {
                         $ev['lat'] = sanitize($_POST['lat']);
                     }
@@ -59,8 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (isset($_POST['location'])) {
                         $ev['location'] = sanitize($_POST['location']);
                     }
-
-                    // If new poster file is uploaded
                     if (isset($_FILES['poster']) && $_FILES['poster']['error'] === UPLOAD_ERR_OK) {
                         $uploadsDir = __DIR__ . '/../public/uploads/';
                         $uniqueFilename = uniqid() . '_' . basename($_FILES['poster']['name']);
@@ -84,8 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     }
-
-    // VOTE ACTION (Going/Thinking)
+    // VOTE ACTION: Going/Thinking
     if (isset($_POST['vote'])) {
         $voteType = sanitize($_POST['vote']);
         $eventId = sanitize($_POST['eventId']);
@@ -109,16 +100,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!in_array($username, $ev['going'])) {
                         $ev['going'][] = $username;
                     }
-                    // Remove from thinking
                     if (($key = array_search($username, $ev['thinking'])) !== false) {
                         unset($ev['thinking'][$key]);
                         $ev['thinking'] = array_values($ev['thinking']);
                     }
-                } else { // thinking
+                } else {
                     if (!in_array($username, $ev['thinking'])) {
                         $ev['thinking'][] = $username;
                     }
-                    // Remove from going
                     if (($key = array_search($username, $ev['going'])) !== false) {
                         unset($ev['going'][$key]);
                         $ev['going'] = array_values($ev['going']);
@@ -138,7 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit;
     }
-
     // CREATE EVENT
     else {
         $username    = isset($_POST['username']) ? sanitize($_POST['username']) : '';
@@ -178,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'displayLocation'=> $displayLocation, // short address
             'lat'            => $lat,
             'lon'            => $lon,
-            'location'       => $fullLoc,
+            'location'       => $fullLoc,         // full address
             'going'          => [],
             'thinking'       => [],
             'created_at'     => date("Y-m-d H:i:s")

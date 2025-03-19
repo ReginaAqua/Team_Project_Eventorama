@@ -24,6 +24,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const editDescription = document.getElementById("editDescription");
   const editDisplayLocation = document.getElementById("editDisplayLocation");
 
+  // Hidden fields for map selections (Create)
+  const createLat = document.getElementById("createLat");
+  const createLon = document.getElementById("createLon");
+  const createLocation = document.getElementById("createLocation");
+
+  // Hidden fields for map selections (Edit)
+  const editLat = document.getElementById("editLat");
+  const editLon = document.getElementById("editLon");
+  const editLocation = document.getElementById("editLocation");
+
   let selectedDate = null;
   let currentUser = localStorage.getItem("currentUser") || null;
   let currentUserRole = localStorage.getItem("currentUserRole") || null;
@@ -40,8 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  loginBtn.addEventListener("click", () => { showModal("login"); });
-  signupBtn.addEventListener("click", () => { showModal("register"); });
+  loginBtn.addEventListener("click", () => showModal("login"));
+  signupBtn.addEventListener("click", () => showModal("register"));
   logoutBtn.addEventListener("click", () => {
     localStorage.removeItem("currentUser");
     localStorage.removeItem("currentUserRole");
@@ -99,6 +109,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (result.success) {
       alert("Event created!");
       createEventForm.reset();
+      // Clear hidden fields
+      createLat.value = "";
+      createLon.value = "";
+      createLocation.value = "";
       fetchEvents();
     } else {
       alert(result.message);
@@ -214,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     attachEventListeners();
   }
 
-  // Creates an event card with hidden details that expand on hover after 3 seconds.
+  // Creates an event card with hover expansion
   function createEventElement(ev) {
     const eventDiv = document.createElement("div");
     eventDiv.className = "event";
@@ -226,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     eventDiv.setAttribute("data-displayLocation", ev.displayLocation || "");
     eventDiv.setAttribute("data-location", ev.location || "");
 
-    // Hidden details that will slide/fade in
+    // Hidden details that expand on hover
     const hiddenDetails = `
       <div class="hidden-details">
         ${ev.displayLocation ? `<p>${ev.displayLocation}</p>` : ""}
@@ -234,7 +248,6 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Going/Thinking counts
     const goingCount = ev.going && Array.isArray(ev.going) ? ev.going.length : 0;
     const thinkingCount = ev.thinking && Array.isArray(ev.thinking) ? ev.thinking.length : 0;
     const countsHTML = `<p>Going: ${goingCount}, Thinking: ${thinkingCount}</p>`;
@@ -269,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ${hiddenDetails}
     `;
 
-    // Set up hover timer for expansion
+    // 3-second hover expansion
     let hoverTimer = null;
     eventDiv.addEventListener("mouseenter", () => {
       hoverTimer = setTimeout(() => {
@@ -328,6 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".editBtn").forEach(btn => {
           btn.addEventListener("click", () => {
             const eventDiv = btn.closest(".event");
+            // Pre-populate form fields from event data
             editEventId.value = eventDiv.getAttribute("data-eventid");
             editEventName.value = eventDiv.getAttribute("data-eventname");
             editDate.value = eventDiv.getAttribute("data-date");
@@ -335,10 +349,73 @@ document.addEventListener("DOMContentLoaded", () => {
             editDescription.value = eventDiv.getAttribute("data-description");
             editDisplayLocation.value = eventDiv.getAttribute("data-displayLocation");
             editPoster.value = "";
+            // Show the modal
             editModal.style.display = "block";
+            // Initialize the edit map: if the event has lat/lon, use them; otherwise, use default
+            initializeEditMap();
           });
         });
       }
     }
   }
+
+  // Initialize Leaflet map for Create Event form
+  let mapCreate = L.map("mapCreate").setView([37.9838, 23.7275], 13); // Default to Athens
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(mapCreate);
+  let markerCreate = L.marker([37.9838, 23.7275]).addTo(mapCreate);
+  let geocoderCreate = L.Control.geocoder({
+    defaultMarkGeocode: false
+  })
+    .on("markgeocode", function(e) {
+      const center = e.geocode.center;
+      markerCreate.setLatLng(center);
+      mapCreate.setView(center, 15);
+      markerCreate.bindPopup(e.geocode.name).openPopup();
+      // Update hidden fields for create form
+      createLat.value = center.lat;
+      createLon.value = center.lng;
+      createLocation.value = e.geocode.name;
+    })
+    .addTo(mapCreate);
+
+  // Variables for edit map
+  let mapEdit, markerEdit, geocoderEdit;
+  function initializeEditMap() {
+    // If map already exists, remove it (if re-editing another event)
+    if (mapEdit) {
+      mapEdit.remove();
+    }
+    // Default center: use event's lat/lon if available, else default to Athens
+    let defaultLat = 37.9838, defaultLon = 23.7275;
+    if (editLat.value && editLon.value) {
+      defaultLat = editLat.value;
+      defaultLon = editLon.value;
+    }
+    mapEdit = L.map("mapEdit").setView([defaultLat, defaultLon], 15);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(mapEdit);
+    markerEdit = L.marker([defaultLat, defaultLon]).addTo(mapEdit);
+    geocoderEdit = L.Control.geocoder({
+      defaultMarkGeocode: false
+    })
+      .on("markgeocode", function(e) {
+        const center = e.geocode.center;
+        markerEdit.setLatLng(center);
+        mapEdit.setView(center, 15);
+        markerEdit.bindPopup(e.geocode.name).openPopup();
+        // Update hidden fields for edit form
+        editLat.value = center.lat;
+        editLon.value = center.lng;
+        editLocation.value = e.geocode.name;
+      })
+      .addTo(mapEdit);
+  }
+  
+  // End of DOMContentLoaded
+  fetchEvents();
 });

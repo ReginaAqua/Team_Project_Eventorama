@@ -16,5 +16,11 @@
         "username": "tomas1",
         "password": "$2y$10$WLufKjmv286Qk3siPWXexe9xbuVSZb8GmgONQ3Fx0emXllFCFQIrm",
         "role": "user"
+    },
+    {
+        "id": "67da98366b689",
+        "username": "tomas123",
+        "password": "$2y$10$Eg1NgW6Uh7.UKpACpR8Fr.Y20PDQpz36HKdE6hrU\/vcf1bL\/Yv.Lu",
+        "role": "user"
     }
 ]
