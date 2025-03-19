@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (result.success) {
       alert("Event created!");
       createEventForm.reset();
-      // Clear hidden fields
+      // Clear hidden fields for map
       createLat.value = "";
       createLon.value = "";
       createLocation.value = "";
@@ -240,7 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
     eventDiv.setAttribute("data-displayLocation", ev.displayLocation || "");
     eventDiv.setAttribute("data-location", ev.location || "");
 
-    // Hidden details that expand on hover
     const hiddenDetails = `
       <div class="hidden-details">
         ${ev.displayLocation ? `<p>${ev.displayLocation}</p>` : ""}
@@ -268,7 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }
 
-    // "Details" link
     const detailsLink = `<a href="event_details.html?id=${ev.id}">Details</a>`;
 
     eventDiv.innerHTML = `
@@ -282,7 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
       ${hiddenDetails}
     `;
 
-    // 3-second hover expansion
     let hoverTimer = null;
     eventDiv.addEventListener("mouseenter", () => {
       hoverTimer = setTimeout(() => {
@@ -341,7 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".editBtn").forEach(btn => {
           btn.addEventListener("click", () => {
             const eventDiv = btn.closest(".event");
-            // Pre-populate form fields from event data
             editEventId.value = eventDiv.getAttribute("data-eventid");
             editEventName.value = eventDiv.getAttribute("data-eventname");
             editDate.value = eventDiv.getAttribute("data-date");
@@ -349,9 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
             editDescription.value = eventDiv.getAttribute("data-description");
             editDisplayLocation.value = eventDiv.getAttribute("data-displayLocation");
             editPoster.value = "";
-            // Show the modal
             editModal.style.display = "block";
-            // Initialize the edit map: if the event has lat/lon, use them; otherwise, use default
             initializeEditMap();
           });
         });
@@ -381,15 +375,14 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .addTo(mapCreate);
 
-  // Variables for edit map
+  // Initialize or reinitialize Leaflet map for Admin Edit form
   let mapEdit, markerEdit, geocoderEdit;
   function initializeEditMap() {
-    // If map already exists, remove it (if re-editing another event)
     if (mapEdit) {
       mapEdit.remove();
     }
-    // Default center: use event's lat/lon if available, else default to Athens
     let defaultLat = 37.9838, defaultLon = 23.7275;
+    // If the event already has saved coordinates, use them
     if (editLat.value && editLon.value) {
       defaultLat = editLat.value;
       defaultLon = editLon.value;
@@ -415,7 +408,6 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .addTo(mapEdit);
   }
-  
-  // End of DOMContentLoaded
+
   fetchEvents();
 });
