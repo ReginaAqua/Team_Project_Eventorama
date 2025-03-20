@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Events - Eventorama</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Leaflet Control Geocoder CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="site-logo">
+        <img src="images/eventorama_logo.png" alt="Eventorama Logo" width="80" height="80">
+      </div>
+      <nav class="main-nav">
+        <button id="backBtn">Back to Main</button>
+        <button id="logoutBtn" style="display:none;">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h2>My Events</h2>
+    <div id="myEventsContainer"></div>
+  </main>
+
+  <!-- Modal for Editing an Event (only the user's own events) -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <!-- The "X" button with id="editClose" -->
+      <span class="close" id="editClose">&times;</span>
+      <h2>Edit Event</h2>
+      <form id="editEventForm" enctype="multipart/form-data">
+        <input type="hidden" name="eventId" id="editEventId">
+
+        <label for="editEventName">Event Name:</label>
+        <input type="text" name="eventName" id="editEventName" required>
+
+        <label for="editDate">Date:</label>
+        <input type="date" name="date" id="editDate" required>
+
+        <label for="editTime">Time:</label>
+        <input type="time" name="time" id="editTime" required>
+
+        <label for="editDescription">Description:</label>
+        <textarea name="description" id="editDescription" required></textarea>
+
+        <label for="editDisplayLocation">Short Address (Optional):</label>
+        <input type="text" name="displayLocation" id="editDisplayLocation" placeholder="Store name or short address">
+
+        <label for="editPoster">Event Poster (optional):</label>
+        <input type="file" name="poster" id="editPoster" accept="image/*">
+
+        <!-- Map for selecting full (long) address during editing -->
+        <div class="map-container">
+          <div id="mapEdit"></div>
+        </div>
+        <!-- Hidden fields for lat, lon, and full address -->
+        <input type="hidden" name="lat" id="editLat">
+        <input type="hidden" name="lon" id="editLon">
+        <input type="hidden" name="location" id="editLocation">
+
+        <button type="submit">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet Control Geocoder JS -->
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Basic references
+      const backBtn = document.getElementById("backBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const myEventsContainer = document.getElementById("myEventsContainer");
+
+      // The edit modal and its close button
+      const editModal = document.getElementById("editModal");
+      const editClose = document.getElementById("editClose");
+      const editEventForm = document.getElementById("editEventForm");
+      const editEventId = document.getElementById("editEventId");
+      const editEventName = document.getElementById("editEventName");
+      const editDate = document.getElementById("editDate");
+      const editTime = document.getElementById("editTime");
+      const editDescription = document.getElementById("editDescription");
+      const editDisplayLocation = document.getElementById("editDisplayLocation");
+      const editLat = document.getElementById("editLat");
+      const editLon = document.getElementById("editLon");
+      const editLocation = document.getElementById("editLocation");
+
+      // Check if user is logged in
+      let currentUser = localStorage.getItem("currentUser") || null;
+      if (!currentUser) {
+        // If not logged in, redirect to main page
+        window.location.href = "index.html";
+      }
+
+      // Show logout button
+      logoutBtn.style.display = "inline-block";
+
+      // "Back to Main" button
+      backBtn.addEventListener("click", () => {
+        window.location.href = "index.html";
+      });
+
+      // "Logout" button
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("currentUserRole");
+        window.location.href = "index.html";
+      });
+
+      // The "X" button to close the edit modal
+      editClose.addEventListener("click", () => {
+        editModal.style.display = "none";
+      });
+      // Also close if clicking outside the modal
+      window.addEventListener("click", (e) => {
+        if (e.target === editModal) {
+          editModal.style.display = "none";
+        }
+      });
+
+      // Fetch the user's events
+      async function fetchMyEvents() {
+        const response = await fetch("../backend/api.php?endpoint=events&action=get");
+        const result = await response.json();
+        if (result.success && result.events) {
+          // Filter events created by the current user
+          const myEvents = result.events.filter(ev => ev.username === currentUser);
+          displayMyEvents(myEvents);
+        } else {
+          myEventsContainer.innerHTML = "<p>No events found.</p>";
+        }
+      }
+
+      function displayMyEvents(events) {
+        myEventsContainer.innerHTML = "";
+        if (events.length === 0) {
+          myEventsContainer.innerHTML = "<p>You have not created any events yet.</p>";
+          return;
+        }
+        // Create an event card for each
+        events.forEach(ev => {
+          const eventDiv = document.createElement("div");
+          eventDiv.className = "event";
+
+          // Store data attributes for easy retrieval
+          eventDiv.setAttribute("data-eventid", ev.id);
+          eventDiv.setAttribute("data-eventname", ev.eventName);
+          eventDiv.setAttribute("data-date", ev.date);
+          eventDiv.setAttribute("data-time", ev.time);
+          eventDiv.setAttribute("data-description", ev.description || "");
+          eventDiv.setAttribute("data-displayLocation", ev.displayLocation || "");
+          eventDiv.setAttribute("data-location", ev.location || "");
+
+          eventDiv.innerHTML = `
+            <div class="event-content">
+              <p><strong>${ev.eventName}</strong> (${ev.date} ${ev.time})</p>
+              <p>${ev.displayLocation ? ev.displayLocation : ""}</p>
+              <a href="event_details.html?id=${ev.id}">Details</a>
+              <button data-eventid="${ev.id}" class="editBtn">Edit</button>
+              <button data-eventid="${ev.id}" class="deleteBtn">Delete</button>
+            </div>
+          `;
+          myEventsContainer.appendChild(eventDiv);
+        });
+        attachEventListeners();
+      }
+
+      function attachEventListeners() {
+        // "Edit" button
+        document.querySelectorAll(".editBtn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const eventDiv = btn.closest(".event");
+
+            // Populate the edit modal with event data
+            editEventId.value = eventDiv.getAttribute("data-eventid");
+            editEventName.value = eventDiv.getAttribute("data-eventname");
+            editDate.value = eventDiv.getAttribute("data-date");
+            editTime.value = eventDiv.getAttribute("data-time");
+            editDescription.value = eventDiv.getAttribute("data-description");
+            editDisplayLocation.value = eventDiv.getAttribute("data-displayLocation");
+            // Clear file input
+            editPoster.value = "";
+
+            // Show the modal
+            editModal.style.display = "block";
+
+            // Initialize or reinitialize the Leaflet map
+            initializeEditMap();
+          });
+        });
+
+        // "Delete" button
+        document.querySelectorAll(".deleteBtn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const eventId = btn.dataset.eventid;
+            if (!confirm("Are you sure you want to delete this event?")) return;
+
+            // Send action=delete to the backend
+            const formData = new FormData();
+            formData.append("action", "delete");
+            formData.append("eventId", eventId);
+            formData.append("username", currentUser);
+
+            const response = await fetch("../backend/api.php?endpoint=events", {
+              method: "POST",
+              body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+              alert("Event deleted!");
+              fetchMyEvents();
+            } else {
+              alert(result.message);
+            }
+          });
+        });
+      }
+
+      // Leaflet map references
+      let mapEdit, markerEdit, geocoderEdit;
+
+      function initializeEditMap() {
+        if (mapEdit) {
+          mapEdit.remove();
+        }
+        let defaultLat = 37.9838, defaultLon = 23.7275;
+        if (editLat.value && editLon.value) {
+          defaultLat = editLat.value;
+          defaultLon = editLon.value;
+        }
+        mapEdit = L.map("mapEdit").setView([defaultLat, defaultLon], 15);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(mapEdit);
+        markerEdit = L.marker([defaultLat, defaultLon]).addTo(mapEdit);
+        geocoderEdit = L.Control.geocoder({
+          defaultMarkGeocode: false
+        })
+          .on("markgeocode", function(e) {
+            const center = e.geocode.center;
+            markerEdit.setLatLng(center);
+            mapEdit.setView(center, 15);
+            markerEdit.bindPopup(e.geocode.name).openPopup();
+            editLat.value = center.lat;
+            editLon.value = center.lng;
+            editLocation.value = e.geocode.name;
+          })
+          .addTo(mapEdit);
+      }
+
+      // "Save Changes" in Edit Event form
+      editEventForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(editEventForm);
+
+        // action=edit so the backend updates the existing event
+        formData.append("action", "edit");
+        formData.append("username", currentUser);
+
+        const response = await fetch("../backend/api.php?endpoint=events", {
+          method: "POST",
+          body: formData
+        });
+        const result = await response.json();
+        if (result.success) {
+          alert("Event updated!");
+          editModal.style.display = "none";
+          fetchMyEvents();
+        } else {
+          alert(result.message);
+        }
+      });
+
+      // Initially load the user's events
+      fetchMyEvents();
+    });
+  </script>
+</body>
+</html>

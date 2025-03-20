@@ -16,11 +16,13 @@
       <div class="site-logo">
         <img src="images/eventorama_logo.png" alt="Eventorama Logo" width="80" height="80">
       </div>
-      <!-- Navigation -->
+      <!-- Navigation buttons -->
       <nav class="main-nav">
         <button id="loginBtn">Login</button>
         <button id="signupBtn">Sign Up</button>
         <button id="logoutBtn" style="display:none;">Logout</button>
+        <!-- New "My Events" button visible when logged in -->
+        <button id="myEventsBtn" style="display:none;">My Events</button>
       </nav>
     </div>
   </header>
@@ -48,6 +50,44 @@
           <button type="submit">Register</button>
         </form>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal for Creating an Event (User) -->
+  <div id="createModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="createClose">&times;</span>
+      <h2>Create Event</h2>
+      <form id="createEventForm" enctype="multipart/form-data">
+        <label for="eventName">Event Name:</label>
+        <input type="text" name="eventName" id="eventName" required>
+
+        <label for="date">Date:</label>
+        <input type="date" name="date" id="date" required>
+
+        <label for="time">Time:</label>
+        <input type="time" name="time" id="time" required>
+
+        <label for="description">Description:</label>
+        <textarea name="description" id="description" required></textarea>
+
+        <label for="displayLocation">Short Address (Optional):</label>
+        <input type="text" name="displayLocation" id="displayLocation" placeholder="Store name or short address">
+
+        <label for="poster">Event Poster (optional):</label>
+        <input type="file" name="poster" id="poster" accept="image/*">
+
+        <!-- Map for selecting full (long) address -->
+        <div class="map-container">
+          <div id="mapCreate"></div>
+        </div>
+        <!-- Hidden fields for lat, lon, and full address -->
+        <input type="hidden" name="lat" id="createLat">
+        <input type="hidden" name="lon" id="createLon">
+        <input type="hidden" name="location" id="createLocation">
+
+        <button type="submit">Create Event</button>
+      </form>
     </div>
   </div>
 
@@ -81,7 +121,7 @@
         <div class="map-container">
           <div id="mapEdit"></div>
         </div>
-        <!-- Hidden fields for long address -->
+        <!-- Hidden fields for lat, lon, and full address -->
         <input type="hidden" name="lat" id="editLat">
         <input type="hidden" name="lon" id="editLon">
         <input type="hidden" name="location" id="editLocation">
@@ -92,47 +132,15 @@
   </div>
 
   <main>
-    <!-- Left column: Date picker & Create Event -->
+    <!-- Left column: Date picker & "Create Event" button -->
     <section class="sidebar-left">
       <div class="date-picker">
         <h3>Select a Date to View Events</h3>
         <input type="date" id="viewDate">
         <button id="viewDateBtn">View Events</button>
       </div>
-
-      <section id="createEventSection" style="display:none;">
-        <h3>Create Event</h3>
-        <form id="createEventForm" enctype="multipart/form-data">
-          <label for="eventName">Event Name:</label>
-          <input type="text" name="eventName" required>
-
-          <label for="date">Date:</label>
-          <input type="date" name="date" required>
-
-          <label for="time">Time:</label>
-          <input type="time" name="time" required>
-
-          <label for="description">Description:</label>
-          <textarea name="description" required></textarea>
-
-          <label for="displayLocation">Short Address (Optional):</label>
-          <input type="text" name="displayLocation" placeholder="Store name or short address">
-
-          <label for="poster">Event Poster:</label>
-          <input type="file" name="poster" accept="image/*">
-
-          <!-- Map for selecting full (long) address during creation -->
-          <div class="map-container">
-            <div id="mapCreate"></div>
-          </div>
-          <!-- Hidden fields for long address -->
-          <input type="hidden" name="lat" id="createLat">
-          <input type="hidden" name="lon" id="createLon">
-          <input type="hidden" name="location" id="createLocation">
-
-          <button type="submit">Create Event</button>
-        </form>
-      </section>
+      <!-- "Create Event" button (visible when logged in) -->
+      <button id="openCreateModalBtn" class="create-btn" style="display:none;">Create Event</button>
     </section>
 
     <!-- Right column: Event Listing -->

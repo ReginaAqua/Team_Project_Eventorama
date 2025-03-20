@@ -1,8 +1,8 @@
 <?php
-// backend/functions.php
+// functions.php
 
 /**
- * Read a JSON file and return its data as an array.
+ * Read JSON data from a file and return it as an associative array.
  */
 function readJSON($filepath) {
     if (!file_exists($filepath)) {
@@ -13,7 +13,7 @@ function readJSON($filepath) {
 }
 
 /**
- * Write an array to a JSON file.
+ * Write an associative array as JSON data into a file.
  */
 function writeJSON($filepath, $data) {
     $json = json_encode($data, JSON_PRETTY_PRINT);
@@ -21,14 +21,14 @@ function writeJSON($filepath, $data) {
 }
 
 /**
- * Generate a unique ID.
+ * Generate a unique identifier for events.
  */
 function generateId() {
     return uniqid();
 }
 
 /**
- * Sanitize input data.
+ * Sanitize input to prevent XSS and other security issues.
  */
 function sanitize($data) {
     return htmlspecialchars(strip_tags(trim($data)));

@@ -8,10 +8,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
   const modalTitle = document.getElementById("modalTitle");
-  const createEventSection = document.getElementById("createEventSection");
-  const createEventForm = document.getElementById("createEventForm");
   const viewDateInput = document.getElementById("viewDate");
   const viewDateBtn = document.getElementById("viewDateBtn");
+
+  // Create Event modal references
+  const openCreateModalBtn = document.getElementById("openCreateModalBtn");
+  const createModal = document.getElementById("createModal");
+  const createClose = document.getElementById("createClose");
+  const createEventForm = document.getElementById("createEventForm");
+  const createLat = document.getElementById("createLat");
+  const createLon = document.getElementById("createLon");
+  const createLocation = document.getElementById("createLocation");
+
+  // "My Events" button (header nav)
+  const myEventsBtn = document.getElementById("myEventsBtn");
 
   // Edit modal references
   const editModal = document.getElementById("editModal");
@@ -23,13 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const editTime = document.getElementById("editTime");
   const editDescription = document.getElementById("editDescription");
   const editDisplayLocation = document.getElementById("editDisplayLocation");
-
-  // Hidden fields for map selections (Create)
-  const createLat = document.getElementById("createLat");
-  const createLon = document.getElementById("createLon");
-  const createLocation = document.getElementById("createLocation");
-
-  // Hidden fields for map selections (Edit)
   const editLat = document.getElementById("editLat");
   const editLon = document.getElementById("editLon");
   const editLocation = document.getElementById("editLocation");
@@ -38,8 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentUser = localStorage.getItem("currentUser") || null;
   let currentUserRole = localStorage.getItem("currentUserRole") || null;
 
+  // Initialize UI based on whether user is logged in
   updateUI();
 
+  // Set default date for date picker
   if (viewDateInput) {
     viewDateInput.value = new Date().toISOString().split("T")[0];
   }
@@ -50,6 +55,49 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // "My Events" button fade-out animation
+  if (myEventsBtn) {
+    myEventsBtn.addEventListener("click", () => {
+      document.body.classList.add("fade-out");
+      setTimeout(() => {
+        window.location.href = "my_events.html";
+      }, 300);
+    });
+  }
+
+  // Create Event modal open
+  if (openCreateModalBtn) {
+    openCreateModalBtn.addEventListener("click", () => {
+      createModal.style.display = "block";
+      // Invalidate map size after modal opens
+      setTimeout(() => {
+        mapCreate.invalidateSize();
+      }, 300);
+    });
+  }
+  // Create Event modal close
+  if (createClose) {
+    createClose.addEventListener("click", () => {
+      createModal.style.display = "none";
+    });
+  }
+  window.addEventListener("click", (e) => {
+    if (e.target === createModal) {
+      createModal.style.display = "none";
+    }
+  });
+
+  // Edit modal close
+  editClose.addEventListener("click", () => {
+    editModal.style.display = "none";
+  });
+  window.addEventListener("click", (e) => {
+    if (e.target === editModal) {
+      editModal.style.display = "none";
+    }
+  });
+
+  // Auth modals
   loginBtn.addEventListener("click", () => showModal("login"));
   signupBtn.addEventListener("click", () => showModal("register"));
   logoutBtn.addEventListener("click", () => {
@@ -59,13 +107,23 @@ document.addEventListener("DOMContentLoaded", () => {
     currentUserRole = null;
     updateUI();
   });
-  closeModal.addEventListener("click", () => { modal.style.display = "none"; });
-  window.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
+  closeModal.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
+  });
 
+  // Login Form submission
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(loginForm);
-    const response = await fetch("../backend/api.php?endpoint=auth", { method: "POST", body: formData });
+    const response = await fetch("../backend/api.php?endpoint=auth", {
+      method: "POST",
+      body: formData
+    });
     const result = await response.json();
     if (result.success) {
       localStorage.setItem("currentUser", result.username);
@@ -79,10 +137,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Signup Form submission
   signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(signupForm);
-    const response = await fetch("../backend/api.php?endpoint=auth", { method: "POST", body: formData });
+    const response = await fetch("../backend/api.php?endpoint=auth", {
+      method: "POST",
+      body: formData
+    });
     const result = await response.json();
     if (result.success) {
       localStorage.setItem("currentUser", result.username);
@@ -96,6 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Create Event Form submission
   createEventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -104,30 +167,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const formData = new FormData(createEventForm);
     formData.append("username", currentUser);
-    const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
+
+    const response = await fetch("../backend/api.php?endpoint=events", {
+      method: "POST",
+      body: formData
+    });
     const result = await response.json();
     if (result.success) {
       alert("Event created!");
       createEventForm.reset();
-      // Clear hidden fields for map
       createLat.value = "";
       createLon.value = "";
       createLocation.value = "";
+      createModal.style.display = "none";
       fetchEvents();
     } else {
       alert(result.message);
     }
   });
 
-  editClose.addEventListener("click", () => { editModal.style.display = "none"; });
-  window.addEventListener("click", (e) => { if (e.target === editModal) editModal.style.display = "none"; });
-
+  // Edit Event Form submission
   editEventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(editEventForm);
-    formData.append("adminAction", "edit");
+    // Use action=edit so events.php updates instead of creating
+    formData.append("action", "edit");
     formData.append("username", currentUser);
-    const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
+
+    const response = await fetch("../backend/api.php?endpoint=events", {
+      method: "POST",
+      body: formData
+    });
     const result = await response.json();
     if (result.success) {
       alert("Event updated!");
@@ -138,6 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Show the login/signup modal
   function showModal(type) {
     modal.style.display = "block";
     if (type === "login") {
@@ -151,21 +222,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Decide which buttons to show
   function updateUI() {
     if (currentUser) {
       logoutBtn.style.display = "inline-block";
       loginBtn.style.display = "none";
       signupBtn.style.display = "none";
-      createEventSection.style.display = "block";
+      openCreateModalBtn.style.display = "block";
+      myEventsBtn.style.display = "inline-block";
     } else {
       logoutBtn.style.display = "none";
       loginBtn.style.display = "inline-block";
       signupBtn.style.display = "inline-block";
-      createEventSection.style.display = "none";
+      openCreateModalBtn.style.display = "none";
+      myEventsBtn.style.display = "none";
     }
     fetchEvents();
   }
 
+  // Fetch events from the backend
   async function fetchEvents() {
     const response = await fetch("../backend/api.php?endpoint=events&action=get");
     const result = await response.json();
@@ -179,6 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
           displayEvents(filtered);
         }
       } else {
+        // Show upcoming events
         const now = new Date();
         const upcoming = result.events.filter(ev => new Date(ev.date + "T" + ev.time) > now);
         upcoming.sort((a, b) => new Date(a.date + "T" + a.time) - new Date(b.date + "T" + b.time));
@@ -228,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
     attachEventListeners();
   }
 
-  // Creates an event card with hover expansion
+  // Creates an event card with hover expansion (500ms delay)
   function createEventElement(ev) {
     const eventDiv = document.createElement("div");
     eventDiv.className = "event";
@@ -280,11 +356,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ${hiddenDetails}
     `;
 
+    // Hover expansion with 500ms delay
     let hoverTimer = null;
     eventDiv.addEventListener("mouseenter", () => {
       hoverTimer = setTimeout(() => {
         eventDiv.classList.add("expanded");
-      }, 3000);
+      }, 500);
     });
     eventDiv.addEventListener("mouseleave", () => {
       clearTimeout(hoverTimer);
@@ -303,9 +380,16 @@ document.addEventListener("DOMContentLoaded", () => {
           formData.append("vote", "going");
           formData.append("eventId", eventId);
           formData.append("username", currentUser);
-          const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
+          const response = await fetch("../backend/api.php?endpoint=events", {
+            method: "POST",
+            body: formData
+          });
           const result = await response.json();
-          if (result.success) { fetchEvents(); } else { alert(result.message); }
+          if (result.success) {
+            fetchEvents();
+          } else {
+            alert(result.message);
+          }
         });
       });
       document.querySelectorAll(".thinkingBtn").forEach(btn => {
@@ -315,9 +399,16 @@ document.addEventListener("DOMContentLoaded", () => {
           formData.append("vote", "thinking");
           formData.append("eventId", eventId);
           formData.append("username", currentUser);
-          const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
+          const response = await fetch("../backend/api.php?endpoint=events", {
+            method: "POST",
+            body: formData
+          });
           const result = await response.json();
-          if (result.success) { fetchEvents(); } else { alert(result.message); }
+          if (result.success) {
+            fetchEvents();
+          } else {
+            alert(result.message);
+          }
         });
       });
       if (currentUserRole === "admin") {
@@ -329,9 +420,16 @@ document.addEventListener("DOMContentLoaded", () => {
               formData.append("adminAction", "delete");
               formData.append("eventId", eventId);
               formData.append("username", currentUser);
-              const response = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
+              const response = await fetch("../backend/api.php?endpoint=events", {
+                method: "POST",
+                body: formData
+              });
               const result = await response.json();
-              if (result.success) { fetchEvents(); } else { alert(result.message); }
+              if (result.success) {
+                fetchEvents();
+              } else {
+                alert(result.message);
+              }
             }
           });
         });
@@ -353,8 +451,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Initialize Leaflet map for Create Event form
-  let mapCreate = L.map("mapCreate").setView([37.9838, 23.7275], 13); // Default to Athens
+  // Leaflet map for Create Event form
+  let mapCreate = L.map("mapCreate").setView([37.9838, 23.7275], 13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
@@ -368,21 +466,19 @@ document.addEventListener("DOMContentLoaded", () => {
       markerCreate.setLatLng(center);
       mapCreate.setView(center, 15);
       markerCreate.bindPopup(e.geocode.name).openPopup();
-      // Update hidden fields for create form
       createLat.value = center.lat;
       createLon.value = center.lng;
       createLocation.value = e.geocode.name;
     })
     .addTo(mapCreate);
 
-  // Initialize or reinitialize Leaflet map for Admin Edit form
+  // Leaflet map for Edit Event form
   let mapEdit, markerEdit, geocoderEdit;
   function initializeEditMap() {
     if (mapEdit) {
       mapEdit.remove();
     }
     let defaultLat = 37.9838, defaultLon = 23.7275;
-    // If the event already has saved coordinates, use them
     if (editLat.value && editLon.value) {
       defaultLat = editLat.value;
       defaultLon = editLon.value;
@@ -401,7 +497,6 @@ document.addEventListener("DOMContentLoaded", () => {
         markerEdit.setLatLng(center);
         mapEdit.setView(center, 15);
         markerEdit.bindPopup(e.geocode.name).openPopup();
-        // Update hidden fields for edit form
         editLat.value = center.lat;
         editLon.value = center.lng;
         editLocation.value = e.geocode.name;
