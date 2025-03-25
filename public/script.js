@@ -417,9 +417,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const eventId = btn.dataset.eventid;
             if (confirm("Are you sure you want to delete this event?")) {
               const formData = new FormData();
-              formData.append("adminAction", "delete");
+              formData.append("action", "delete");
               formData.append("eventId", eventId);
               formData.append("username", currentUser);
+              formData.append("role", currentUserRole);
               const response = await fetch("../backend/api.php?endpoint=events", {
                 method: "POST",
                 body: formData

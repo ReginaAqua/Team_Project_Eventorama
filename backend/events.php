@@ -13,8 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // EDIT EVENT: update an existing event
     // -------------------------------
     if (isset($_POST['action']) && $_POST['action'] === 'edit') {
-        $eventId   = isset($_POST['eventId']) ? sanitize($_POST['eventId']) : '';
-        $username  = isset($_POST['username']) ? sanitize($_POST['username']) : '';
+        $eventId  = isset($_POST['eventId']) ? sanitize($_POST['eventId']) : '';
+        $username = isset($_POST['username']) ? sanitize($_POST['username']) : '';
         if (!$eventId || !$username) {
             echo json_encode(['success' => false, 'message' => 'Missing eventId or username.']);
             exit;
@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $found = false;
         foreach ($events as &$ev) {
             if ($ev['id'] === $eventId) {
-                // Only allow event owner (or admin) to edit
+                // Only allow edit if the event belongs to the requesting user
                 if ($ev['username'] !== $username) {
                     echo json_encode(['success' => false, 'message' => 'Unauthorized to edit this event.']);
                     exit;
@@ -32,9 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ev['time']            = isset($_POST['time']) ? sanitize($_POST['time']) : $ev['time'];
                 $ev['description']     = isset($_POST['description']) ? sanitize($_POST['description']) : $ev['description'];
                 $ev['displayLocation'] = isset($_POST['displayLocation']) ? sanitize($_POST['displayLocation']) : $ev['displayLocation'];
-                $ev['lat']             = isset($_POST['lat']) ? sanitize($_POST['lat']) : $ev['lat'];
-                $ev['lon']             = isset($_POST['lon']) ? sanitize($_POST['lon']) : $ev['lon'];
-                $ev['location']        = isset($_POST['location']) ? sanitize($_POST['location']) : $ev['location'];
+                // Update location fields only if the posted value is not empty
+                $ev['lat']     = (isset($_POST['lat']) && trim($_POST['lat']) !== "") ? sanitize($_POST['lat']) : $ev['lat'];
+                $ev['lon']     = (isset($_POST['lon']) && trim($_POST['lon']) !== "") ? sanitize($_POST['lon']) : $ev['lon'];
+                $ev['location']= (isset($_POST['location']) && trim($_POST['location']) !== "") ? sanitize($_POST['location']) : $ev['location'];
 
                 // If a new poster is uploaded, update the poster field
                 if (isset($_FILES['poster']) && $_FILES['poster']['error'] === UPLOAD_ERR_OK) {
@@ -67,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'delete') {
         $eventId  = isset($_POST['eventId']) ? sanitize($_POST['eventId']) : '';
         $username = isset($_POST['username']) ? sanitize($_POST['username']) : '';
+        $role     = isset($_POST['role']) ? sanitize($_POST['role']) : '';
         if (!$eventId || !$username) {
             echo json_encode(['success' => false, 'message' => 'Missing eventId or username.']);
             exit;
@@ -74,8 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $found = false;
         foreach ($events as $key => $ev) {
             if ($ev['id'] === $eventId) {
-                // Only allow event owner (or admin) to delete
-                if ($ev['username'] !== $username) {
+                // Allow deletion if the user is the creator or is an admin
+                if ($ev['username'] !== $username && $role !== 'admin') {
                     echo json_encode(['success' => false, 'message' => 'You cannot delete this event.']);
                     exit;
                 }
@@ -126,16 +128,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!in_array($username, $ev['going'])) {
                         $ev['going'][] = $username;
                     }
-                    // Remove user from thinking if present
+                    // Remove from thinking if present
                     if (($key = array_search($username, $ev['thinking'])) !== false) {
                         unset($ev['thinking'][$key]);
                         $ev['thinking'] = array_values($ev['thinking']);
                     }
-                } else { // "thinking"
+                } else { // voteType === 'thinking'
                     if (!in_array($username, $ev['thinking'])) {
                         $ev['thinking'][] = $username;
                     }
-                    // Remove user from going if present
+                    // Remove from going if present
                     if (($key = array_search($username, $ev['going'])) !== false) {
                         unset($ev['going'][$key]);
                         $ev['going'] = array_values($ev['going']);
