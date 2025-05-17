@@ -12,21 +12,68 @@
 <body>
   <header>
     <div class="header-container">
-      <!-- Logo wrapped in a link to go to home page -->
       <div class="site-logo">
         <a href="index.html">
           <img src="images/eventorama_logo.png" alt="Eventorama Logo" width="80" height="80">
         </a>
       </div>
-      <!-- Navigation buttons -->
       <nav class="main-nav">
         <button id="loginBtn">Login</button>
         <button id="signupBtn">Sign Up</button>
         <button id="logoutBtn" style="display:none;">Logout</button>
         <button id="myEventsBtn" style="display:none;">My Events</button>
+        <button id="reviewReportsBtn" style="display:none;">Review Reports</button>
       </nav>
     </div>
   </header>
+
+  <!-- Search Bar -->
+  <div class="search-bar-container" style="width: 90%; max-width: 1200px; margin: 20px auto; display: flex; gap: 10px;">
+    <input type="text" id="searchInput" placeholder="Search by title, category, or location" style="flex: 1; padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px;">
+    <button id="searchBtn" style="padding: 8px 12px; background-color: #6F2C91; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Search</button>
+  </div>
+
+  <main>
+    <section class="sidebar-left">
+      <div class="date-picker">
+        <h3>Select a Date to View Events</h3>
+        <input type="date" id="viewDate">
+        <button id="viewDateBtn">View Events</button>
+      </div>
+      <div class="category-filter">
+        <label for="categoryFilter">Filter by Category:</label>
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="Music">Music</option>
+          <option value="Nightlife">Nightlife</option>
+          <option value="Arts & Culture">Arts & Culture</option>
+          <option value="Education">Education</option>
+          <option value="Sports & Fitness">Sports & Fitness</option>
+          <option value="Social">Social</option>
+          <option value="Food & Drink">Food & Drink</option>
+          <option value="Charity">Charity</option>
+          <option value="Seasonal">Seasonal</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="city-filter">
+        <label for="cityFilterSelect">Filter by City:</label>
+        <select id="cityFilterSelect">
+          <option value="">All Cities</option>
+        </select>
+      </div>
+      <button id="openCreateModalBtn" class="create-btn" style="display:none;">Create Event</button>
+    </section>
+
+    <section class="main-listing">
+      <h2>All Events</h2>
+      <div id="calendar"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Eventorama</p>
+  </footer>
 
   <!-- Modal for Login/Sign Up -->
   <div id="modal" class="modal">
@@ -46,15 +93,21 @@
           <input type="hidden" name="action" value="register">
           <label for="username">Username:</label>
           <input type="text" name="username" required>
+          <label for="email">Email:</label>
+          <input type="email" name="email" required>
+          <label for="dob">Date of Birth:</label>
+          <input type="date" name="dob" required>
           <label for="password">Password:</label>
           <input type="password" name="password" required>
+          <label for="confirm_password">Confirm Password:</label>
+          <input type="password" name="confirm_password" required>
           <button type="submit">Register</button>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Modal for Creating an Event (User) -->
+  <!-- Modal for Creating an Event -->
   <div id="createModal" class="modal">
     <div class="modal-content">
       <span class="close" id="createClose">&times;</span>
@@ -68,24 +121,37 @@
         <input type="time" name="time" id="time" required>
         <label for="description">Description:</label>
         <textarea name="description" id="description" required></textarea>
+        <label for="category">Category:</label>
+        <select name="category" id="category">
+          <option value="">Select category</option>
+          <option value="Music">Music</option>
+          <option value="Nightlife">Nightlife</option>
+          <option value="Arts & Culture">Arts & Culture</option>
+          <option value="Education">Education</option>
+          <option value="Sports & Fitness">Sports & Fitness</option>
+          <option value="Social">Social</option>
+          <option value="Food & Drink">Food & Drink</option>
+          <option value="Charity">Charity</option>
+          <option value="Seasonal">Seasonal</option>
+          <option value="Other">Other</option>
+        </select>
         <label for="displayLocation">Short Address (Optional):</label>
         <input type="text" name="displayLocation" id="displayLocation" placeholder="Store name or short address">
         <label for="poster">Event Poster (optional):</label>
         <input type="file" name="poster" id="poster" accept="image/*">
-        <!-- Map for selecting full (long) address -->
         <div class="map-container">
           <div id="mapCreate"></div>
         </div>
-        <!-- Hidden fields for lat, lon, and full address -->
         <input type="hidden" name="lat" id="createLat">
         <input type="hidden" name="lon" id="createLon">
         <input type="hidden" name="location" id="createLocation">
+        <input type="hidden" name="city" id="createCity">
         <button type="submit">Create Event</button>
       </form>
     </div>
   </div>
 
-  <!-- Modal for Editing Event (Admin) -->
+  <!-- Modal for Editing an Event (Admin) -->
   <div id="editModal" class="modal">
     <div class="modal-content">
       <span class="close" id="editClose">&times;</span>
@@ -100,48 +166,41 @@
         <input type="time" name="time" id="editTime" required>
         <label for="editDescription">Description:</label>
         <textarea name="description" id="editDescription" required></textarea>
+        <label for="editCategory">Category:</label>
+        <select name="editCategory" id="editCategory">
+          <option value="">Select category</option>
+          <option value="Music">Music</option>
+          <option value="Nightlife">Nightlife</option>
+          <option value="Arts & Culture">Arts & Culture</option>
+          <option value="Education">Education</option>
+          <option value="Sports & Fitness">Sports & Fitness</option>
+          <option value="Social">Social</option>
+          <option value="Food & Drink">Food & Drink</option>
+          <option value="Charity">Charity</option>
+          <option value="Seasonal">Seasonal</option>
+          <option value="Other">Other</option>
+        </select>
         <label for="editDisplayLocation">Short Address (Optional):</label>
         <input type="text" name="displayLocation" id="editDisplayLocation" placeholder="Store name or short address">
         <label for="editPoster">Event Poster (optional):</label>
         <input type="file" name="poster" id="editPoster" accept="image/*">
-        <!-- Map for selecting full (long) address during editing -->
         <div class="map-container">
           <div id="mapEdit"></div>
         </div>
-        <!-- Hidden fields for lat, lon, and full address -->
         <input type="hidden" name="lat" id="editLat">
         <input type="hidden" name="lon" id="editLon">
         <input type="hidden" name="location" id="editLocation">
+        <input type="hidden" name="city" id="editCity">
         <button type="submit">Save Changes</button>
       </form>
     </div>
   </div>
 
-  <main>
-    <!-- Left column: Date picker & "Create Event" button -->
-    <section class="sidebar-left">
-      <div class="date-picker">
-        <h3>Select a Date to View Events</h3>
-        <input type="date" id="viewDate">
-        <button id="viewDateBtn">View Events</button>
-      </div>
-      <!-- "Create Event" button (visible when logged in) -->
-      <button id="openCreateModalBtn" class="create-btn" style="display:none;">Create Event</button>
-    </section>
-    <!-- Right column: Event Listing -->
-    <section class="main-listing">
-      <h2>All Events</h2>
-      <div id="calendar"></div>
-    </section>
-  </main>
-
   <footer>
     <p>© 2025 Eventorama</p>
   </footer>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Leaflet Control Geocoder JS -->
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <script src="script.js"></script>
 </body>

@@ -1,26 +1,26 @@
 [
     {
-        "id": "67d2df46d0a0e",
-        "username": "tomas",
-        "password": "$2y$10$RkkqWk5dyvMv7479E5YgpeR9NcNaxqavFU1t1mgk15SaKUyzLKL4.",
-        "role": "user"
-    },
-    {
-        "id": "67d6d18f8cacf",
+        "id": "67fbb5fca3b6e",
         "username": "admin",
-        "password": "$2y$10$cziQQJj4KcGUdtA4qApbPO3GzivaMUrscMlJeulFuiQ01FtvRoGXq",
+        "password": "$2y$10$maPsbMGLIa.cJOTQWcD7xuxUShUp.Lc94SrZeV.Q62EgqBCEnTdDC",
+        "email": "tomas@gmail.com",
+        "dob": "2003-08-31",
         "role": "admin"
     },
     {
-        "id": "67d9ea40eda76",
-        "username": "tomas1",
-        "password": "$2y$10$WLufKjmv286Qk3siPWXexe9xbuVSZb8GmgONQ3Fx0emXllFCFQIrm",
+        "id": "67fbc45253a81",
+        "username": "od",
+        "password": "$2y$10$UYv9nS\/wLQSzHVKed6abgODDKisw0Hp\/Wg.x\/NK9xJMRJahCA9wsK",
+        "email": "od@gmail.com",
+        "dob": "2002-06-12",
         "role": "user"
     },
     {
-        "id": "67da98366b689",
-        "username": "tomas123",
-        "password": "$2y$10$Eg1NgW6Uh7.UKpACpR8Fr.Y20PDQpz36HKdE6hrU\/vcf1bL\/Yv.Lu",
+        "id": "68051e92c9777",
+        "username": "phos",
+        "password": "$2y$10$GAN4WnzhHCYMRfvY0v5eHuwj9oGyu3G4a02wIN2sGbCLy5y2.aRu2",
+        "email": "anastasiosdrog@hotmail.com",
+        "dob": "2025-04-19",
         "role": "user"
     }
 ]

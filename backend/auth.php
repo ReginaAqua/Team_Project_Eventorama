@@ -24,6 +24,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'register') {
+        // Get additional fields
+        $email = isset($_POST['email']) ? sanitize($_POST['email']) : '';
+        $dob   = isset($_POST['dob']) ? sanitize($_POST['dob']) : '';
+
+        if (!$username || !$password || !$email || !$dob) {
+            echo json_encode(['success' => false, 'message' => 'All fields (username, email, date of birth, password) are required.']);
+            exit;
+        }
+
         // Check if user already exists.
         foreach ($users as $user) {
             if ($user['username'] === $username) {
@@ -31,12 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         }
-        // Create new user with a hashed password and default role "user"
+        // Create new user with a hashed password, email, and date of birth
         $newUser = [
-            'id' => generateId(),
+            'id'       => generateId(),
             'username' => $username,
             'password' => password_hash($password, PASSWORD_DEFAULT),
-            'role' => 'user'
+            'email'    => $email,
+            'dob'      => $dob,
+            'role'     => 'user'
         ];
         $users[] = $newUser;
         if (writeJSON($usersFile, $users)) {

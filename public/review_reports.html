@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Review Reports - Eventorama</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #f4f4f4;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+    header {
+      background-color: #fff;
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #6F2C91;
+    }
+    main {
+      width: 90%;
+      max-width: 1000px;
+      margin: 40px auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .event {
+      margin-bottom: 15px;
+      border-left: 4px solid #dc3545;
+      padding: 10px;
+      border-radius: 6px;
+      background-color: #fff;
+    }
+    .event h3 {
+      margin: 0 0 5px 0;
+      color: #dc3545;
+    }
+    .event p {
+      margin: 3px 0;
+      font-size: 0.9rem;
+    }
+    button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    #backBtn {
+      background-color: #6F2C91;
+      color: #fff;
+      margin-bottom: 15px;
+    }
+    #backBtn:hover {
+      background-color: #581f72;
+    }
+    .deleteBtn {
+      background-color: #dc3545;
+      color: #fff;
+      margin-left: 10px;
+    }
+    .deleteBtn:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Reported Events</h1>
+  </header>
+  <main>
+    <button id="backBtn">← Back to Main</button>
+    <div id="reportedEventsContainer"></div>
+  </main>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const backBtn = document.getElementById("backBtn");
+      const reportedEventsContainer = document.getElementById("reportedEventsContainer");
+      let currentUser = localStorage.getItem("currentUser") || null;
+      let currentUserRole = localStorage.getItem("currentUserRole") || null;
+      if (!currentUser || currentUserRole !== 'admin') {
+        alert("Access denied. Admin only.");
+        window.location.href = "index.html";
+      }
+      backBtn.addEventListener("click", () => {
+        window.location.href = "index.html";
+      });
+      
+      // Fetch events and display those that have reports
+      async function fetchReportedEvents() {
+        const response = await fetch("../backend/api.php?endpoint=events&action=get");
+        const result = await response.json();
+        if (result.success && result.events) {
+          // Filter events that have at least 1 report
+          const reportedEvents = result.events.filter(ev => ev.reports && ev.reports.length > 0);
+          displayReportedEvents(reportedEvents);
+        } else {
+          reportedEventsContainer.innerHTML = "<p>No reported events found.</p>";
+        }
+      }
+      
+      // Display reported events with a Delete button
+      function displayReportedEvents(events) {
+        reportedEventsContainer.innerHTML = "";
+        if (events.length === 0) {
+          reportedEventsContainer.innerHTML = "<p>No reported events.</p>";
+          return;
+        }
+        events.forEach(ev => {
+          const eventDiv = document.createElement("div");
+          eventDiv.className = "event";
+          const reportsCount = ev.reports ? ev.reports.length : 0;
+          eventDiv.innerHTML = `
+            <h3>${ev.eventName}</h3>
+            <p><strong>Date:</strong> ${ev.date}</p>
+            <p><strong>Time:</strong> ${ev.time}</p>
+            <p><strong>Reports:</strong> ${reportsCount}</p>
+            <a href="event_details.html?id=${ev.id}">View Details</a>
+            <button class="deleteBtn" data-eventid="${ev.id}">Delete</button>
+          `;
+          reportedEventsContainer.appendChild(eventDiv);
+        });
+        attachDeleteListeners();
+      }
+      
+      // Attach event listeners to all delete buttons in reported events
+      function attachDeleteListeners() {
+        document.querySelectorAll(".deleteBtn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const eventId = btn.getAttribute("data-eventid");
+            if (!confirm("Are you sure you want to delete this event?")) return;
+            const formData = new FormData();
+            formData.append("action", "delete");
+            formData.append("eventId", eventId);
+            formData.append("username", currentUser);
+            formData.append("role", currentUserRole);
+            const response = await fetch("../backend/api.php?endpoint=events", {
+              method: "POST",
+              body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+              alert("Event deleted.");
+              fetchReportedEvents();
+            } else {
+              alert(result.message);
+            }
+          });
+        });
+      }
+      
+      fetchReportedEvents();
+    });
+  </script>
+</body>
+</html>

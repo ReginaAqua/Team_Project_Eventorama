@@ -6,19 +6,130 @@
   <link rel="stylesheet" href="style.css">
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    /* Corporate, modern look – you can customize these styles further */
+    body {
+      background-color: #f4f4f4;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+    header {
+      background-color: #fff;
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #6F2C91;
+    }
+    main {
+      width: 90%;
+      max-width: 800px;
+      margin: 40px auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #backBtn {
+      margin-bottom: 20px;
+      background-color: #6F2C91;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #backBtn:hover {
+      background-color: #581f72;
+    }
+    #eventDetails {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #eventDetails h2 {
+      font-size: 1.6rem;
+      color: #6F2C91;
+      margin-bottom: 0.2rem;
+    }
+    #eventDetails p {
+      margin: 4px 0;
+      line-height: 1.4rem;
+    }
+    #eventDetails img {
+      max-width: 280px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+    .info-block {
+      background-color: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .info-block strong {
+      color: #6F2C91;
+    }
+    #mapDetail {
+      width: 100%;
+      height: 300px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 0.85rem;
+      color: #666;
+    }
+    /* Buttons */
+    #goingBtn,
+    #thinkingBtn,
+    #reportBtn {
+      background-color: #6F2C91;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: background-color 0.3s ease;
+    }
+    #reportBtn {
+      background-color: #dc3545;
+    }
+    #goingBtn:hover,
+    #thinkingBtn:hover {
+      background-color: #581f72;
+    }
+    #reportBtn:hover {
+      background-color: #c82333;
+    }
+  </style>
 </head>
 <body>
-  <header style="background: linear-gradient(135deg, #6F2C91, #c86dd7); padding: 10px; color: #fff;">
-    <h1 style="margin-left: 20px;">Event Details</h1>
+  <header>
+    <h1>Event Details</h1>
   </header>
 
-  <main style="width: 90%; max-width: 800px; margin: 20px auto;">
-    <button id="backBtn" style="margin-bottom: 20px; background-color: #fff; color: #6F2C91; border: none; padding: 10px 16px; border-radius: 20px; font-weight: bold; cursor: pointer;">← Back to Main</button>
-    <div id="eventDetails" style="background-color: #fff; padding: 20px; border: 1px solid #ccc; border-radius: 8px;"></div>
+  <main>
+    <button id="backBtn">← Back to Main</button>
+    <div id="eventDetails"></div>
     <div id="mapDetail"></div>
   </main>
 
-  <footer style="text-align:center; margin: 20px auto;">
+  <footer>
     <p>© 2025 Eventorama</p>
   </footer>
 
@@ -29,6 +140,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const eventId = urlParams.get("id");
     const backBtn = document.getElementById("backBtn");
+
     backBtn.addEventListener("click", () => {
       window.location.href = "index.html";
     });
@@ -42,61 +154,91 @@
           document.getElementById("eventDetails").innerHTML = "<p>Event not found.</p>";
           return;
         }
-        let html = `
-          <h2 style="color:#6F2C91;">${ev.eventName}</h2>
-          <p><strong>Date/Time:</strong> ${ev.date} ${ev.time}</p>
-          <p><strong>Description:</strong> ${ev.description}</p>
-        `;
-        const fullAddress = ev.location ? ev.location : "No address provided";
-        if (ev.lat && ev.lon) {
-          const gMapsLink = `https://www.google.com/maps/search/?api=1&query=${ev.lat},${ev.lon}`;
-          html += `<p><strong>Address:</strong> ${fullAddress} <br>
-                    (<a href="${gMapsLink}" target="_blank">Open in Google Maps</a>)</p>`;
-        } else {
-          html += `<p><strong>Address:</strong> ${fullAddress}</p>`;
-        }
-        if (ev.poster) {
-          html += `<img src="${ev.poster}" alt="Event Poster" style="max-width:300px; display:block; margin:10px 0;">`;
-        }
-        const goingCount = ev.going && Array.isArray(ev.going) ? ev.going.length : 0;
-        const thinkingCount = ev.thinking && Array.isArray(ev.thinking) ? ev.thinking.length : 0;
-        html += `<p><strong>Going:</strong> ${goingCount} | <strong>Thinking:</strong> ${thinkingCount}</p>`;
-        if (currentUser) {
-          html += `
-            <button id="goingBtn" style="background-color:#6F2C91; color:#fff; border:none; padding:10px 16px; border-radius:20px; font-weight:bold; cursor:pointer;">Going</button>
-            <button id="thinkingBtn" style="background-color:#6F2C91; color:#fff; border:none; padding:10px 16px; border-radius:20px; font-weight:bold; cursor:pointer;">Thinking</button>
-          `;
-        }
-        document.getElementById("eventDetails").innerHTML = html;
-        if (currentUser) {
-          document.getElementById("goingBtn").addEventListener("click", async () => {
-            await voteAction("going");
-          });
-          document.getElementById("thinkingBtn").addEventListener("click", async () => {
-            await voteAction("thinking");
-          });
-        }
-        async function voteAction(type) {
-          const formData = new FormData();
-          formData.append("vote", type);
-          formData.append("eventId", ev.id);
-          formData.append("username", currentUser);
-          const res = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
-          const data = await res.json();
-          if (data.success) {
-            loadEvent();
-          } else {
-            alert(data.message);
-          }
-        }
-        // Initialize the map using the event's coordinates
-        if (ev.lat && ev.lon) {
-          initMap(ev.lat, ev.lon, fullAddress);
-        } else {
-          document.getElementById("mapDetail").innerHTML = "<p>Map not available.</p>";
-        }
+        renderEvent(ev);
       } else {
         document.getElementById("eventDetails").innerHTML = "<p>No events data.</p>";
+      }
+    }
+
+    function renderEvent(ev) {
+      let html = `
+        <h2>${ev.eventName.toUpperCase()}</h2>
+        <div class="info-block">
+          <p><strong>Date/Time:</strong> ${ev.date} ${ev.time}</p>
+          <p><strong>Description:</strong> ${ev.description}</p>
+          ${ev.category ? `<p><strong>Category:</strong> ${ev.category}</p>` : ""}
+          ${ev.city ? `<p><strong>City:</strong> ${ev.city}</p>` : ""}
+      `;
+      const fullAddress = ev.location ? ev.location : "No address provided";
+      if (ev.lat && ev.lon) {
+        const gMapsLink = `https://www.google.com/maps/search/?api=1&query=${ev.lat},${ev.lon}`;
+        html += `<p><strong>Address:</strong> ${fullAddress}<br>
+                   (<a href="${gMapsLink}" target="_blank">Open in Google Maps</a>)</p>`;
+      } else {
+        html += `<p><strong>Address:</strong> ${fullAddress}</p>`;
+      }
+      html += `</div>`;
+      if (ev.poster) {
+        html += `<p><img src="${ev.poster}" alt="Event Poster"></p>`;
+      }
+      const goingCount = ev.going && Array.isArray(ev.going) ? ev.going.length : 0;
+      const thinkingCount = ev.thinking && Array.isArray(ev.thinking) ? ev.thinking.length : 0;
+      html += `<p><strong>Going:</strong> ${goingCount} | <strong>Thinking:</strong> ${thinkingCount}</p>`;
+
+      if (currentUser) {
+        // Added the Report button alongside the Going and Thinking buttons.
+        html += `
+          <button id="goingBtn">Going</button>
+          <button id="thinkingBtn">Thinking</button>
+          <button id="reportBtn">Report</button>
+        `;
+      }
+      document.getElementById("eventDetails").innerHTML = html;
+
+      if (currentUser) {
+        document.getElementById("goingBtn").addEventListener("click", async () => {
+          await voteAction("going", ev.id);
+        });
+        document.getElementById("thinkingBtn").addEventListener("click", async () => {
+          await voteAction("thinking", ev.id);
+        });
+        document.getElementById("reportBtn").addEventListener("click", async () => {
+          if (!confirm("Are you sure you want to report this event?")) return;
+          await reportEvent(ev.id);
+        });
+      }
+      if (ev.lat && ev.lon) {
+        initMap(ev.lat, ev.lon, fullAddress);
+      } else {
+        document.getElementById("mapDetail").innerHTML = "<p>Map not available.</p>";
+      }
+    }
+
+    async function voteAction(type, eventId) {
+      const formData = new FormData();
+      formData.append("vote", type);
+      formData.append("eventId", eventId);
+      formData.append("username", currentUser);
+      const res = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) {
+        loadEvent();
+      } else {
+        alert(data.message);
+      }
+    }
+
+    async function reportEvent(eventId) {
+      const formData = new FormData();
+      formData.append("action", "report");
+      formData.append("eventId", eventId);
+      formData.append("username", currentUser);
+      const res = await fetch("../backend/api.php?endpoint=events", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) {
+        alert("Report submitted. Thank you for your feedback.");
+      } else {
+        alert(data.message);
       }
     }
 

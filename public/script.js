@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Basic references
+  // Basic element references
   const loginBtn = document.getElementById("loginBtn");
   const signupBtn = document.getElementById("signupBtn");
   const logoutBtn = document.getElementById("logoutBtn");
@@ -11,6 +11,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewDateInput = document.getElementById("viewDate");
   const viewDateBtn = document.getElementById("viewDateBtn");
 
+  // Filter elements
+  const categoryFilter = document.getElementById("categoryFilter");
+  let selectedCategory = "";
+  const cityFilterSelect = document.getElementById("cityFilterSelect");
+  let selectedCity = "";
+  const searchInput = document.getElementById("searchInput");
+  const searchBtn = document.getElementById("searchBtn");
+  let searchQuery = "";
+
   // Create Event modal references
   const openCreateModalBtn = document.getElementById("openCreateModalBtn");
   const createModal = document.getElementById("createModal");
@@ -19,9 +28,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const createLat = document.getElementById("createLat");
   const createLon = document.getElementById("createLon");
   const createLocation = document.getElementById("createLocation");
+  const createCategory = document.getElementById("category");
 
-  // "My Events" button (header nav)
+  // "My Events" button
   const myEventsBtn = document.getElementById("myEventsBtn");
+
+  // Review Reports button (admin only)
+  const reviewReportsBtn = document.getElementById("reviewReportsBtn");
 
   // Edit modal references
   const editModal = document.getElementById("editModal");
@@ -36,15 +49,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const editLat = document.getElementById("editLat");
   const editLon = document.getElementById("editLon");
   const editLocation = document.getElementById("editLocation");
+  const editCategory = document.getElementById("editCategory");
 
   let selectedDate = null;
   let currentUser = localStorage.getItem("currentUser") || null;
   let currentUserRole = localStorage.getItem("currentUserRole") || null;
 
-  // Initialize UI based on whether user is logged in
-  updateUI();
-
-  // Set default date for date picker
+  // Set default date for the date picker
   if (viewDateInput) {
     viewDateInput.value = new Date().toISOString().split("T")[0];
   }
@@ -55,7 +66,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // "My Events" button fade-out animation
+  // Listen for changes on the category dropdown
+  if (categoryFilter) {
+    categoryFilter.addEventListener("change", () => {
+      selectedCategory = categoryFilter.value;
+      fetchEvents();
+    });
+  }
+
+  // Listen for changes on the city dropdown
+  if (cityFilterSelect) {
+    cityFilterSelect.addEventListener("change", () => {
+      selectedCity = cityFilterSelect.value;
+      fetchEvents();
+    });
+  }
+
+  // Listen for search input
+  if (searchBtn) {
+    searchBtn.addEventListener("click", () => {
+      searchQuery = searchInput.value.trim();
+      fetchEvents();
+    });
+  }
+  if (searchInput) {
+    searchInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        searchQuery = searchInput.value.trim();
+        fetchEvents();
+      }
+    });
+  }
+
+  // "My Events" button action
   if (myEventsBtn) {
     myEventsBtn.addEventListener("click", () => {
       document.body.classList.add("fade-out");
@@ -65,17 +108,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Create Event modal open
+  // "Review Reports" button action (admin)
+  if (reviewReportsBtn) {
+    reviewReportsBtn.addEventListener("click", () => {
+      window.location.href = "review_reports.html";
+    });
+  }
+
+  // Create Event modal open/close
   if (openCreateModalBtn) {
     openCreateModalBtn.addEventListener("click", () => {
       createModal.style.display = "block";
-      // Invalidate map size after modal opens
       setTimeout(() => {
         mapCreate.invalidateSize();
       }, 300);
     });
   }
-  // Create Event modal close
   if (createClose) {
     createClose.addEventListener("click", () => {
       createModal.style.display = "none";
@@ -88,16 +136,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Edit modal close
-  editClose.addEventListener("click", () => {
-    editModal.style.display = "none";
-  });
+  if (editClose) {
+    editClose.addEventListener("click", () => {
+      editModal.style.display = "none";
+    });
+  }
   window.addEventListener("click", (e) => {
     if (e.target === editModal) {
       editModal.style.display = "none";
     }
   });
 
-  // Auth modals
+  // Auth modal button actions
   loginBtn.addEventListener("click", () => showModal("login"));
   signupBtn.addEventListener("click", () => showModal("register"));
   logoutBtn.addEventListener("click", () => {
@@ -116,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Login Form submission
+  // Login form submission
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(loginForm);
@@ -137,9 +187,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Signup Form submission
+  // Signup form submission with password confirmation check
   signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const password = signupForm.querySelector('input[name="password"]').value;
+    const confirmPassword = signupForm.querySelector('input[name="confirm_password"]').value;
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
     const formData = new FormData(signupForm);
     const response = await fetch("../backend/api.php?endpoint=auth", {
       method: "POST",
@@ -158,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Create Event Form submission
+  // Create Event form submission
   createEventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -167,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const formData = new FormData(createEventForm);
     formData.append("username", currentUser);
-
+    formData.append("category", createCategory.value);
     const response = await fetch("../backend/api.php?endpoint=events", {
       method: "POST",
       body: formData
@@ -179,6 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
       createLat.value = "";
       createLon.value = "";
       createLocation.value = "";
+      document.getElementById("createCity").value = "";
       createModal.style.display = "none";
       fetchEvents();
     } else {
@@ -186,14 +243,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Edit Event Form submission
+  // Edit Event form submission
   editEventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(editEventForm);
-    // Use action=edit so events.php updates instead of creating
     formData.append("action", "edit");
     formData.append("username", currentUser);
-
+    formData.append("category", editCategory.value);
     const response = await fetch("../backend/api.php?endpoint=events", {
       method: "POST",
       body: formData
@@ -208,7 +264,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Show the login/signup modal
+  // Reverse geocoding using Nominatim
+  function getCityFromCoordinates(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+    return fetch(url, { headers: { 'User-Agent': 'EventoramaApp/1.0' } })
+      .then(response => response.json())
+      .then(data => {
+        return data.address.city || data.address.town || data.address.village || '';
+      })
+      .catch(err => {
+        console.error("Reverse geocoding error:", err);
+        return '';
+      });
+  }
+
+  // Show the modal (login or signup)
   function showModal(type) {
     modal.style.display = "block";
     if (type === "login") {
@@ -222,7 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Decide which buttons to show
+  // Update UI based on login state and role, then fetch events
   function updateUI() {
     if (currentUser) {
       logoutBtn.style.display = "inline-block";
@@ -237,31 +307,56 @@ document.addEventListener("DOMContentLoaded", () => {
       openCreateModalBtn.style.display = "none";
       myEventsBtn.style.display = "none";
     }
+    // Show Review Reports button only for admin users
+    if (currentUser && currentUserRole === "admin") {
+      reviewReportsBtn.style.display = "inline-block";
+    } else {
+      reviewReportsBtn.style.display = "none";
+    }
     fetchEvents();
   }
 
-  // Fetch events from the backend
   async function fetchEvents() {
     const response = await fetch("../backend/api.php?endpoint=events&action=get");
     const result = await response.json();
     if (result.success && result.events) {
+      // Populate city dropdown with unique city names
+      populateCityDropdown(result.events);
+      let filteredEvents = result.events;
+      // Filter by date if selected
       if (selectedDate) {
-        const filtered = result.events.filter(ev => ev.date === selectedDate);
-        if (filtered.length === 0) {
-          document.getElementById("calendar").innerHTML = "<p>No events</p>";
-        } else {
-          filtered.sort((a, b) => new Date("1970-01-01T" + a.time) - new Date("1970-01-01T" + b.time));
-          displayEvents(filtered);
-        }
+        filteredEvents = filteredEvents.filter(ev => ev.date === selectedDate);
+      }
+      // Filter by category
+      if (selectedCategory !== "") {
+        filteredEvents = filteredEvents.filter(ev => ev.category === selectedCategory);
+      }
+      // Filter by city
+      if (selectedCity !== "") {
+        filteredEvents = filteredEvents.filter(ev =>
+          ev.city && ev.city.toLowerCase() === selectedCity.toLowerCase()
+        );
+      }
+      // Search filter
+      if (searchQuery !== "") {
+        filteredEvents = filteredEvents.filter(ev =>
+          ev.eventName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (ev.category && ev.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (ev.location && ev.location.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+      }
+      if (filteredEvents.length === 0) {
+        document.getElementById("calendar").innerHTML = "<p>No events</p>";
       } else {
-        // Show upcoming events
-        const now = new Date();
-        const upcoming = result.events.filter(ev => new Date(ev.date + "T" + ev.time) > now);
-        upcoming.sort((a, b) => new Date(a.date + "T" + a.time) - new Date(b.date + "T" + b.time));
-        if (upcoming.length === 0) {
-          document.getElementById("calendar").innerHTML = "<p>No upcoming events</p>";
+        if (!selectedDate) {
+          // Upcoming events: filter events after current time
+          const now = new Date();
+          filteredEvents = filteredEvents.filter(ev => new Date(ev.date + "T" + ev.time) > now);
+          filteredEvents.sort((a, b) => new Date(a.date + "T" + a.time) - new Date(b.date + "T" + b.time));
+          displayUpcomingEvents(filteredEvents);
         } else {
-          displayUpcomingEvents(upcoming);
+          filteredEvents.sort((a, b) => new Date("1970-01-01T" + a.time) - new Date("1970-01-01T" + b.time));
+          displayEvents(filteredEvents);
         }
       }
     } else {
@@ -269,16 +364,52 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Populate the city dropdown with distinct city names from events
+  function populateCityDropdown(allEvents) {
+    const citySet = new Set();
+    allEvents.forEach(ev => {
+      if (ev.city && ev.city.trim() !== "") {
+        citySet.add(ev.city.trim());
+      }
+    });
+    cityFilterSelect.innerHTML = `<option value="">All Cities</option>`;
+    citySet.forEach(city => {
+      const option = document.createElement("option");
+      option.value = city;
+      option.textContent = city;
+      cityFilterSelect.appendChild(option);
+    });
+  }
+
+  // Display upcoming events grouped by date
   function displayUpcomingEvents(events) {
     const calendarDiv = document.getElementById("calendar");
     calendarDiv.innerHTML = "<h3>Upcoming Events</h3>";
+    const eventsByDate = {};
     events.forEach(ev => {
-      const eventDiv = createEventElement(ev);
-      calendarDiv.appendChild(eventDiv);
+      if (!eventsByDate[ev.date]) {
+        eventsByDate[ev.date] = [];
+      }
+      eventsByDate[ev.date].push(ev);
+    });
+    const sortedDates = Object.keys(eventsByDate).sort((a, b) => new Date(a) - new Date(b));
+    sortedDates.forEach(date => {
+      const dateSection = document.createElement("div");
+      dateSection.className = "date-section";
+      const dateHeader = document.createElement("h4");
+      dateHeader.className = "date-header";
+      dateHeader.innerText = date;
+      dateSection.appendChild(dateHeader);
+      eventsByDate[date].forEach(ev => {
+        const eventDiv = createEventElement(ev);
+        dateSection.appendChild(eventDiv);
+      });
+      calendarDiv.appendChild(dateSection);
     });
     attachEventListeners();
   }
 
+  // Display events for a specific date, grouped by hour
   function displayEvents(events) {
     const calendarDiv = document.getElementById("calendar");
     calendarDiv.innerHTML = "";
@@ -304,7 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
     attachEventListeners();
   }
 
-  // Creates an event card with hover expansion (500ms delay)
+  // Create an event card element
   function createEventElement(ev) {
     const eventDiv = document.createElement("div");
     eventDiv.className = "event";
@@ -315,6 +446,8 @@ document.addEventListener("DOMContentLoaded", () => {
     eventDiv.setAttribute("data-description", ev.description || "");
     eventDiv.setAttribute("data-displayLocation", ev.displayLocation || "");
     eventDiv.setAttribute("data-location", ev.location || "");
+    eventDiv.setAttribute("data-category", ev.category || "");
+    eventDiv.setAttribute("data-city", ev.city || "");
 
     const hiddenDetails = `
       <div class="hidden-details">
@@ -345,9 +478,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const detailsLink = `<a href="event_details.html?id=${ev.id}">Details</a>`;
 
+    const categoryLabel = (ev.category && ev.category.trim() !== "") ? ev.category : "N/A";
+    const cityLabel = (ev.city && ev.city.trim() !== "") ? ev.city : "N/A";
+
     eventDiv.innerHTML = `
       <div class="event-content">
-        <p><strong>${ev.eventName}</strong> (${ev.date} ${ev.time})</p>
+        <p><strong>${ev.eventName}</strong> (${ev.time})</p>
+        <p><em>Category: ${categoryLabel}</em></p>
+        <p><em>City: ${cityLabel}</em></p>
         ${countsHTML}
         ${voteButtonsHTML}
         ${adminButtonsHTML}
@@ -356,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ${hiddenDetails}
     `;
 
-    // Hover expansion with 500ms delay
+    // Hover expansion
     let hoverTimer = null;
     eventDiv.addEventListener("mouseenter", () => {
       hoverTimer = setTimeout(() => {
@@ -443,7 +581,10 @@ document.addEventListener("DOMContentLoaded", () => {
             editTime.value = eventDiv.getAttribute("data-time");
             editDescription.value = eventDiv.getAttribute("data-description");
             editDisplayLocation.value = eventDiv.getAttribute("data-displayLocation");
-            editPoster.value = "";
+            editCategory.value = eventDiv.getAttribute("data-category") || "";
+            if (document.getElementById("editPoster")) {
+              document.getElementById("editPoster").value = "";
+            }
             editModal.style.display = "block";
             initializeEditMap();
           });
@@ -470,6 +611,9 @@ document.addEventListener("DOMContentLoaded", () => {
       createLat.value = center.lat;
       createLon.value = center.lng;
       createLocation.value = e.geocode.name;
+      getCityFromCoordinates(center.lat, center.lng).then(city => {
+        document.getElementById("createCity").value = city;
+      });
     })
     .addTo(mapCreate);
 
@@ -501,9 +645,12 @@ document.addEventListener("DOMContentLoaded", () => {
         editLat.value = center.lat;
         editLon.value = center.lng;
         editLocation.value = e.geocode.name;
+        getCityFromCoordinates(center.lat, center.lng).then(city => {
+          document.getElementById("editCity").value = city;
+        });
       })
       .addTo(mapEdit);
   }
 
-  fetchEvents();
+  updateUI();
 });

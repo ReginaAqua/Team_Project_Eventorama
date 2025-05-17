@@ -318,6 +318,79 @@ main {
   background-color: #581f72;
 }
 
+/* Ensure that form fields in modal dialogs are displayed in block format */
+.modal-content form label,
+.modal-content form input,
+.modal-content form select,
+.modal-content form textarea {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.date-section {
+  margin-top: 20px;
+}
+
+.date-header {
+  font-size: 1.1rem;
+  color: #6F2C91;
+  background-color: #f9f9f9;
+  padding: 5px 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #eee;
+}
+
+
+
+.city-filter label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #6F2C91;
+}
+.city-filter select {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.category-filter label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #6F2C91;
+}
+.category-filter select {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.category-filter label,
+.city-filter label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #6F2C91;
+}
+
+.category-filter select,
+.city-filter select {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
 /* Footer */
 footer {
   width: 90%;

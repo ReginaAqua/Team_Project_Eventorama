@@ -8,6 +8,14 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <!-- Leaflet Control Geocoder CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <style>
+    /* (Optional) Styling for the stats display */
+    .statsDisplay {
+      margin-top: 5px;
+      font-size: 0.85rem;
+      color: #6F2C91;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -18,7 +26,6 @@
           <img src="images/eventorama_logo.png" alt="Eventorama Logo" width="80" height="80">
         </a>
       </div>
-      
       <!-- Navigation buttons -->
       <nav class="main-nav">
         <button id="backBtn">Back to Main</button>
@@ -39,18 +46,40 @@
       <h2>Edit Event</h2>
       <form id="editEventForm" enctype="multipart/form-data">
         <input type="hidden" name="eventId" id="editEventId">
+
         <label for="editEventName">Event Name:</label>
         <input type="text" name="eventName" id="editEventName" required>
+
         <label for="editDate">Date:</label>
         <input type="date" name="date" id="editDate" required>
+
         <label for="editTime">Time:</label>
         <input type="time" name="time" id="editTime" required>
+
         <label for="editDescription">Description:</label>
         <textarea name="description" id="editDescription" required></textarea>
+
+        <label for="editCategory">Category:</label>
+        <select name="editCategory" id="editCategory">
+          <option value="">Select category</option>
+          <option value="Music">Music</option>
+          <option value="Nightlife">Nightlife</option>
+          <option value="Arts & Culture">Arts & Culture</option>
+          <option value="Education">Education</option>
+          <option value="Sports & Fitness">Sports & Fitness</option>
+          <option value="Social">Social</option>
+          <option value="Food & Drink">Food & Drink</option>
+          <option value="Charity">Charity</option>
+          <option value="Seasonal">Seasonal</option>
+          <option value="Other">Other</option>
+        </select>
+
         <label for="editDisplayLocation">Short Address (Optional):</label>
         <input type="text" name="displayLocation" id="editDisplayLocation" placeholder="Store name or short address">
+
         <label for="editPoster">Event Poster (optional):</label>
         <input type="file" name="poster" id="editPoster" accept="image/*">
+        
         <!-- Map for selecting full (long) address during editing -->
         <div class="map-container">
           <div id="mapEdit"></div>
@@ -59,6 +88,8 @@
         <input type="hidden" name="lat" id="editLat">
         <input type="hidden" name="lon" id="editLon">
         <input type="hidden" name="location" id="editLocation">
+        <input type="hidden" name="city" id="editCity">
+
         <button type="submit">Save Changes</button>
       </form>
     </div>
@@ -74,7 +105,6 @@
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Basic references
       const backBtn = document.getElementById("backBtn");
       const logoutBtn = document.getElementById("logoutBtn");
       const myEventsContainer = document.getElementById("myEventsContainer");
@@ -92,8 +122,8 @@
       const editLat = document.getElementById("editLat");
       const editLon = document.getElementById("editLon");
       const editLocation = document.getElementById("editLocation");
+      const editCategory = document.getElementById("editCategory");
 
-      // Check if user is logged in
       let currentUser = localStorage.getItem("currentUser") || null;
       if (!currentUser) {
         window.location.href = "index.html";
@@ -110,7 +140,7 @@
         window.location.href = "index.html";
       });
 
-      // Close the edit modal when clicking the "X" or outside it
+      // Close the edit modal
       editClose.addEventListener("click", () => {
         editModal.style.display = "none";
       });
@@ -147,12 +177,16 @@
           eventDiv.setAttribute("data-description", ev.description || "");
           eventDiv.setAttribute("data-displayLocation", ev.displayLocation || "");
           eventDiv.setAttribute("data-location", ev.location || "");
+          eventDiv.setAttribute("data-category", ev.category || "");
 
+          // Notice the new 'Show Stats' button
           eventDiv.innerHTML = `
             <div class="event-content">
               <p><strong>${ev.eventName}</strong> (${ev.date} ${ev.time})</p>
+              ${ev.category ? `<p><em>Category: ${ev.category}</em></p>` : ""}
               <p>${ev.displayLocation ? ev.displayLocation : ""}</p>
               <a href="event_details.html?id=${ev.id}">Details</a>
+              <button data-eventid="${ev.id}" class="statsBtn">Show Stats</button>
               <button data-eventid="${ev.id}" class="editBtn">Edit</button>
               <button data-eventid="${ev.id}" class="deleteBtn">Delete</button>
             </div>
@@ -163,6 +197,31 @@
       }
 
       function attachEventListeners() {
+        // Show Stats button
+        document.querySelectorAll(".statsBtn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const eventId = btn.dataset.eventid;
+            const statsUrl = `../backend/api.php?endpoint=events&action=stats&eventId=${eventId}&username=${currentUser}`;
+            const res = await fetch(statsUrl);
+            const data = await res.json();
+            if (data.success) {
+              // Create or update a <p> below the button to display stats
+              const parentDiv = btn.parentNode;
+              let statsDisplay = parentDiv.querySelector(".statsDisplay");
+              if (!statsDisplay) {
+                statsDisplay = document.createElement("p");
+                statsDisplay.className = "statsDisplay";
+                parentDiv.appendChild(statsDisplay);
+              }
+              statsDisplay.innerText =
+                `Going Average Age: ${data.going_avg !== null ? data.going_avg : 'N/A'} | Thinking Average Age: ${data.thinking_avg !== null ? data.thinking_avg : 'N/A'}`;
+            } else {
+              alert(data.message);
+            }
+          });
+        });
+
+        // Edit button
         document.querySelectorAll(".editBtn").forEach(btn => {
           btn.addEventListener("click", () => {
             const eventDiv = btn.closest(".event");
@@ -172,11 +231,14 @@
             editTime.value = eventDiv.getAttribute("data-time");
             editDescription.value = eventDiv.getAttribute("data-description");
             editDisplayLocation.value = eventDiv.getAttribute("data-displayLocation");
-            editPoster.value = "";
+            editCategory.value = eventDiv.getAttribute("data-category") || "";
+            document.getElementById("editPoster").value = "";
             editModal.style.display = "block";
             initializeEditMap();
           });
         });
+
+        // Delete button
         document.querySelectorAll(".deleteBtn").forEach(btn => {
           btn.addEventListener("click", async () => {
             const eventId = btn.dataset.eventid;
@@ -231,25 +293,6 @@
           })
           .addTo(mapEdit);
       }
-
-      editEventForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const formData = new FormData(editEventForm);
-        formData.append("action", "edit");
-        formData.append("username", currentUser);
-        const response = await fetch("../backend/api.php?endpoint=events", {
-          method: "POST",
-          body: formData
-        });
-        const result = await response.json();
-        if (result.success) {
-          alert("Event updated!");
-          editModal.style.display = "none";
-          fetchMyEvents();
-        } else {
-          alert(result.message);
-        }
-      });
 
       fetchMyEvents();
     });
